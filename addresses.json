@@ -3,28 +3,28 @@
   "codeHash": "0xb10f93483fabc17fc063a7e2ae09d27f98e4694b4010bad512cfcc4a666a0cd4",
   "contractRegistry": "0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019",
   "deployed": {
-    "curationController": "0x2590A4239b70F4F9AB8A413e9084f378aFb4431B",
-    "mandateRegistry": "0xccBaE99864D78139d060c8ba23B2d24aDB1E4Ff0",
-    "mockStable": "0xE13d8a4399e4Da0fAE8d602AdF889A4c83B2d9bC",
+    "curationController": "0x38538d37D9d4A6BF3e94001d9D291c56a2E8828F",
+    "mandateRegistry": "0x34e30A884b1770920D4c1B15bd4fDeD399Bc3fA0",
+    "mockStable": "0x644d62389d222EB55cFbe541cD38f7e9Cd3c1C5F",
     "mockVenues": [
-      "0x0C7A495C0FA3C983264B172E35a0b3d5EbCA144c",
-      "0xB4519de515cBB1EECb223bC4d6f6945a43e7f11C"
+      "0x6D54209C200021c08569BDD4D38b040d679C4C96",
+      "0x1Ea62A18fF8738E115C26e2737b37dB4f4B9E262"
     ],
-    "reserveAdapter": "0x762566AD77dF42c54470b6970c975EEFf4CA97f3",
-    "vault": "0x847ce9a0BD36D0388146B9d83761106E8b3B179e",
+    "reserveAdapter": "0x9b958127cfC9420ab52F6542Cb34389FC5E0604A",
+    "vault": "0xDf20F02cef779962496Bde513ADa3cf8ACb28Ce2",
     "venueAdapters": [
-      "0x16dCed782D062844Fb5b72c00Ae4e9E1c7B10996",
-      "0x7eE5652F42292cf6289942Cd3a0bed3615643b99"
+      "0x8eD187591efbe256a0C4dd57477877C8E7D9F71c",
+      "0x473EC0A36904F5c5Ea5d520C2cDeC8c66245BAad"
     ]
   },
   "flrUsdFeedId": "0x01464c522f55534400000000000000000000000000",
   "implementations": {
-    "curationControllerImpl": "0x03B9F70b77e23C16A0965809D6c59DDcC1915504",
-    "mandateRegistryImpl": "0x05232F7dCFC57A142B149E0FE6f722409d823129",
-    "vaultImpl": "0x878d6bb07Cd44017e0C97c6FBbEDeDe102331063"
+    "curationControllerImpl": "0xcd848D1B77f4da5e6F6D7eB0f2a14e80135d9a35",
+    "mandateRegistryImpl": "0x18d46672FC4982a0557144260bBEc3a7B74f2cB4",
+    "vaultImpl": "0xd3b200386D251231d88a6EC55E9FC5B8e2e783cb"
   },
   "modelVersion": "1",
   "network": "coston2",
   "rpcUrl": "https://coston2-api.flare.network/ext/C/rpc",
-  "teeSignerAddress": "0xFAE48F154189D889C65dFbE1eC0D369BDF69381c"
+  "teeSignerAddress": "0xDcA55aEf296e73e4266a967493D6f7dd94F12323"
 }

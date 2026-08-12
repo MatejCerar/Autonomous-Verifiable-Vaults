@@ -43,6 +43,48 @@ explorer). Cycles are idempotent, so you can run it repeatedly. Click **Run bad
 plan** to watch the contract reject an out-of-mandate plan on-chain. Tear the
 whole stack down with `bash down.sh`.
 
+## Live knobs (interactive demo, no code changes)
+
+The venue conditions and the mandate limits are adjustable on-chain, and the
+model reads both fresh every cycle. So you can change a knob between cycles and
+watch the system react. Run these from the demo folder with your deployer key
+exported (it is the venue operator and the registry owner). After each knob,
+click **Run cycle** and watch Step 1 (inputs) and Step 3 (plan) change.
+
+```bash
+cd   # your demo folder
+export PK=0x<your deployer key>
+RPC=https://coston2-api.flare.network/ext/C/rpc
+V0=$(jq -r '.deployed.mockVenues[0]'   addresses.json)
+MR=$(jq -r '.deployed.mandateRegistry' addresses.json)
+knob(){ docker run --rm -e PK --entrypoint sh ghcr.io/foundry-rs/foundry:latest -c "cast send $1 '$2' $3 --rpc-url $RPC --private-key \$PK"; }
+```
+
+**Demo A - the model adapts to market conditions.** Saturate venue 0 above the
+90% utilisation limit and the model routes away from it:
+
+```bash
+knob $V0 'setUtilisationBips(uint256)' 9500
+# Run cycle -> venue 0 shows "utilisation over max"; allocation shifts to venue 1 + reserve
+knob $V0 'setUtilisationBips(uint256)' 4000     # reset -> venue 0 comes back next cycle
+```
+
+**Demo B - the chain enforces even against its own model.** Tighten venue 0's
+on-chain cap to 10%, below the model's 25% target, and the contract rejects the
+model's own signed plan:
+
+```bash
+knob $MR 'setVenueCapBips(uint256,uint256)' '0 1000'
+# Run cycle -> the model still signs 25% for venue 0, and the contract REVERTS "over venue cap"
+knob $MR 'setVenueCapBips(uint256,uint256)' '0 3000'   # reset cap to 30%
+```
+
+Demo B is the point that lands with a curation firm: the guarantee is
+independent of the model. Even if the curator's model is buggy or compromised
+and tries to breach the mandate, the chain rejects it. Tighten the cap live and
+the model's own plan bounces. Together with the **Run bad plan** button and the
+explorer link, that is a complete story.
+
 ## Layout
 
 - `contracts/` - the enforcement layer (Foundry): `CurationController`,
@@ -61,4 +103,16 @@ whole stack down with `bash down.sh`.
 transactions in the demo. That file, and the whole `TEE/` stack, are gitignored
 and must never be committed. This is a testnet demo key; rotate it and never use
 a mainnet key here.
-# Autonomous-Verifiable-Vaults
+
+## What are venue 0 and venue 1?
+
+A "venue" is a place the vault can deploy capital to earn yield, for example a
+lending market. This demo has two of them, venue 0 and venue 1, so the model has
+a real allocation decision to make (how much to put in each, and how much to keep
+in reserve) and so you can see it react when the two behave differently. In this
+proof of concept both are `MockLendingVenue` contracts: they stand in for real
+markets and expose knobs (utilisation, available liquidity, depeg) that let us
+simulate any market condition on demand. In production these slots would point at
+real lending markets, and the model, the mandate, and the enforcement layer stay
+exactly the same.
+

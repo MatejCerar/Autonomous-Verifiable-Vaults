@@ -63,12 +63,19 @@ export type Plan = z.infer<typeof planSchema>;
 export type Envelope = z.infer<typeof envelopeSchema>;
 export type ModelInputs = z.infer<typeof inputsSchema>;
 
-// The /inputs endpoint returns the authenticated FTSO read. It may be the raw
-// inputs object or wrapped in { inputs }. Accept both, validate the inner shape.
-export const inputsResponseSchema = z.union([
-  inputsSchema,
-  z.object({ inputs: inputsSchema }),
-]);
+// The /inputs endpoint returns the authenticated read: the FTSO feed nested
+// under `feed`, plus per-venue state. Map it to the flat shape Step 1 uses.
+const MAX_STALENESS_SECONDS = 600; // mirrors the model's staleness gate
+
+export const inputsResponseSchema = z.object({
+  feed: z.object({
+    value: z.string(),
+    decimals: z.number().int(),
+    timestamp: z.string(),
+    oracleFallback: z.boolean().optional(),
+  }),
+  venues: z.array(z.object({ depeg: z.boolean().optional() })).optional(),
+});
 
 export type BadKind =
   | "overcap"
@@ -87,8 +94,17 @@ async function getJson(url: string): Promise<unknown> {
 
 export async function fetchInputs(): Promise<ModelInputs> {
   const raw = await getJson(`${MODEL_URL}/inputs`);
-  const parsed = inputsResponseSchema.parse(raw);
-  return "inputs" in parsed ? parsed.inputs : parsed;
+  const r = inputsResponseSchema.parse(raw);
+  const ts = Number(r.feed.timestamp);
+  const nowSec = Math.floor(Date.now() / 1000);
+  const fresh = ts > 0 && nowSec - ts <= MAX_STALENESS_SECONDS;
+  return {
+    flrUsdValue: r.feed.value,
+    flrUsdDecimals: r.feed.decimals,
+    flrUsdTimestamp: r.feed.timestamp,
+    fresh,
+    depeg: (r.venues ?? []).some((v) => v.depeg === true),
+  };
 }
 
 export async function fetchCycle(bad?: BadKind): Promise<Envelope> {
