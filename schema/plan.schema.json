@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AutomatedCurationPlanEnvelope",
+  "description": "Wire format returned by the tee-model service and consumed by the frontend and scripts. FROZEN.",
+  "type": "object",
+  "required": ["plan", "signature", "inputHash", "attestation"],
+  "additionalProperties": false,
+  "properties": {
+    "plan": {
+      "type": "object",
+      "required": ["planId", "modelVersion", "codeHash", "nonce", "expiry", "totalOut", "reserveAmount", "allocations"],
+      "additionalProperties": false,
+      "properties": {
+        "planId": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+        "modelVersion": { "type": "string", "description": "uint256 as decimal string" },
+        "codeHash": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+        "nonce": { "type": "string", "description": "uint256 as decimal string" },
+        "expiry": { "type": "string", "description": "unix seconds as decimal string" },
+        "totalOut": { "type": "string", "description": "wei as decimal string" },
+        "reserveAmount": { "type": "string", "description": "wei as decimal string" },
+        "allocations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["venueId", "amount"],
+            "additionalProperties": false,
+            "properties": {
+              "venueId": { "type": "string", "description": "uint256 as decimal string" },
+              "amount": { "type": "string", "description": "wei as decimal string" }
+            }
+          }
+        }
+      }
+    },
+    "signature": { "type": "string", "pattern": "^0x[0-9a-fA-F]{130}$", "description": "65-byte EIP-191 signature" },
+    "inputHash": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$", "description": "commitment over the authenticated inputs" },
+    "reasonCodes": {
+      "type": "array",
+      "description": "human-readable per-strategy eligibility results for the UI",
+      "items": {
+        "type": "object",
+        "properties": {
+          "venueId": { "type": "string" },
+          "eligible": { "type": "boolean" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "description": "echoed authenticated inputs for display",
+      "properties": {
+        "flrUsdValue": { "type": "string" },
+        "flrUsdDecimals": { "type": "integer" },
+        "flrUsdTimestamp": { "type": "string" },
+        "fresh": { "type": "boolean" },
+        "depeg": { "type": "boolean" }
+      }
+    },
+    "attestation": {
+      "type": "object",
+      "description": "SIMULATED. Only the hardware root of trust is stubbed. The signature and codeHash are real.",
+      "required": ["kind", "note"],
+      "properties": {
+        "kind": { "type": "string", "const": "simulated-confidential-space" },
+        "jwt": { "type": "string", "description": "stub, not hardware-verified" },
+        "claims": {
+          "type": "object",
+          "properties": {
+            "image_digest": { "type": "string" },
+            "hwmodel": { "type": "string" },
+            "platform": { "type": "string" }
+          }
+        },
+        "note": { "type": "string", "const": "Attestation is simulated for this PoC. Swap the signer for a tee-node enclave for real attestation; contracts are unchanged." }
+      }
+    }
+  }
+}

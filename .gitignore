@@ -1,0 +1,23 @@
+# ---- secrets: NEVER commit ----
+**/.env
+**/.env.local
+**/.env.*.local
+
+# ---- the TEE stack (Flare's tee-node + FCC extension scaffold) ----
+# It has its own git repos and a local .env holding a private key. Do not
+# republish it here. To run the live TEE, place that stack under TEE/ locally
+# (see REAL_TEE.md). up.sh builds the TEE image from it.
+TEE/
+
+# ---- dependencies / build artifacts ----
+**/node_modules/
+**/dist/
+contracts/out/
+contracts/cache/
+contracts/lib/
+contracts/broadcast/
+
+# ---- misc ----
+**/*.log
+tee-model/last-plan.json
+.DS_Store

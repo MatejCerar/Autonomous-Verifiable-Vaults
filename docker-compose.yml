@@ -1,0 +1,37 @@
+name: avv
+
+services:
+  tee:
+    build:
+      context: ./TEE
+      dockerfile: ../docker/Dockerfile.tee
+    image: avv/tee:latest
+    environment:
+      MODE: "1"
+      INITIAL_OWNER: "${OWNER:-0xF9F3a52Bee73c53b6d0a5548DA41e4f77af9AB4e}"
+      PROXY_URL: "http://127.0.0.1:1"
+      CONFIG_PORT: "5501"
+      SIGN_PORT: "7701"
+      EXTENSION_PORT: "7702"
+    ports:
+      - "127.0.0.1:7701:7701"
+    restart: unless-stopped
+
+  model:
+    build:
+      context: ./tee-model
+      dockerfile: ../docker/Dockerfile.model
+    image: avv/model:latest
+    environment:
+      RPC_URL: "${RPC:-https://coston2-api.flare.network/ext/C/rpc}"
+      TEE_SIGN_URL: "http://tee:7701/sign"
+      PORT: "8080"
+      # dummy local key; in TEE mode the plan is signed by the TEE, not this key
+      TEE_PRIVATE_KEY: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+    volumes:
+      - ./addresses.json:/addresses.json:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - tee
+    restart: unless-stopped

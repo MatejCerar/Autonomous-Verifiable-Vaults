@@ -1,0 +1,30 @@
+{
+  "chainId": 114,
+  "codeHash": "0xb10f93483fabc17fc063a7e2ae09d27f98e4694b4010bad512cfcc4a666a0cd4",
+  "contractRegistry": "0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019",
+  "deployed": {
+    "curationController": "0x2590A4239b70F4F9AB8A413e9084f378aFb4431B",
+    "mandateRegistry": "0xccBaE99864D78139d060c8ba23B2d24aDB1E4Ff0",
+    "mockStable": "0xE13d8a4399e4Da0fAE8d602AdF889A4c83B2d9bC",
+    "mockVenues": [
+      "0x0C7A495C0FA3C983264B172E35a0b3d5EbCA144c",
+      "0xB4519de515cBB1EECb223bC4d6f6945a43e7f11C"
+    ],
+    "reserveAdapter": "0x762566AD77dF42c54470b6970c975EEFf4CA97f3",
+    "vault": "0x847ce9a0BD36D0388146B9d83761106E8b3B179e",
+    "venueAdapters": [
+      "0x16dCed782D062844Fb5b72c00Ae4e9E1c7B10996",
+      "0x7eE5652F42292cf6289942Cd3a0bed3615643b99"
+    ]
+  },
+  "flrUsdFeedId": "0x01464c522f55534400000000000000000000000000",
+  "implementations": {
+    "curationControllerImpl": "0x03B9F70b77e23C16A0965809D6c59DDcC1915504",
+    "mandateRegistryImpl": "0x05232F7dCFC57A142B149E0FE6f722409d823129",
+    "vaultImpl": "0x878d6bb07Cd44017e0C97c6FBbEDeDe102331063"
+  },
+  "modelVersion": "1",
+  "network": "coston2",
+  "rpcUrl": "https://coston2-api.flare.network/ext/C/rpc",
+  "teeSignerAddress": "0xFAE48F154189D889C65dFbE1eC0D369BDF69381c"
+}

@@ -1,0 +1,16 @@
+# Real Flare tee-node in extension mode (MODE=1 simulated attestation).
+# Build context MUST be demo/TEE (so the go.mod replace ../../tee-node/tee-node resolves).
+FROM golang:1.25.1-alpine AS build
+RUN apk add --no-cache git
+WORKDIR /src
+COPY tee-node/tee-node ./tee-node/tee-node
+COPY extensions-example/dvn-extension ./extensions-example/dvn-extension
+WORKDIR /src/extensions-example/dvn-extension
+ENV GOTOOLCHAIN=auto GOFLAGS=-mod=mod
+RUN CGO_ENABLED=0 go build -o /ext-tee ./cmd/docker
+
+FROM alpine:latest
+COPY --from=build /ext-tee /ext-tee
+ENV MODE=1 CONFIG_PORT=5501 SIGN_PORT=7701 EXTENSION_PORT=7702 LOG_LEVEL=INFO
+EXPOSE 5501 7701 7702
+ENTRYPOINT ["/ext-tee"]
