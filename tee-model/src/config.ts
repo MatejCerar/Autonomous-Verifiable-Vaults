@@ -9,8 +9,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // tee-model/src -> repo root
 export const DEMO_ROOT = join(__dirname, "..", "..");
 // Single source of truth for the active deployment. Ships as the mainnet-prepare
-// default (no controller deployed); a deploy script (DeployTestnet on Coston2 or
-// DeployMystic on Flare mainnet) overwrites addresses.json with the live stack.
+// default (no controller deployed); DeployMystic.s.sol overwrites addresses.json
+// with the live stack once deployed.
 export const ADDRESSES_FILE = join(DEMO_ROOT, "addresses.json");
 export const ABI_DIR = join(DEMO_ROOT, "abi");
 // Live Flare-mainnet Mystic market snapshot the model runs its optimizer over.

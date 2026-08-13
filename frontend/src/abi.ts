@@ -68,7 +68,38 @@ export const erc4626Abi = [
   },
 ] as const;
 
+// ContractRegistry: resolves live Flare system-contract addresses by name. Only
+// used to look up FtsoV2 (never hardcode). Same address on all four networks.
+export const contractRegistryAbi = [
+  {
+    type: "function",
+    name: "getContractAddressByName",
+    stateMutability: "view",
+    inputs: [{ name: "_name", type: "string" }],
+    outputs: [{ name: "", type: "address" }],
+  },
+] as const;
+
+// FtsoV2 block-latency feed reader. getFeedById returns the scaled integer value
+// plus an int8 decimals exponent and the feed timestamp. Marked view here (a fee
+// may apply for the payable variant, but eth_call reads are free).
+export const ftsoV2Abi = [
+  {
+    type: "function",
+    name: "getFeedById",
+    stateMutability: "view",
+    inputs: [{ name: "_feedId", type: "bytes21" }],
+    outputs: [
+      { name: "value", type: "uint256" },
+      { name: "decimals", type: "int8" },
+      { name: "timestamp", type: "uint64" },
+    ],
+  },
+] as const;
+
 export const abis = {
   erc20: erc20Abi,
   erc4626: erc4626Abi,
+  contractRegistry: contractRegistryAbi,
+  ftsoV2: ftsoV2Abi,
 };

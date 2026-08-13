@@ -14,6 +14,7 @@ import { fmtPct, fmtUsd } from "@/format";
 
 export interface Step2ModelProps {
   optimizer?: OptimizerResult;
+  live?: boolean;
 }
 
 // One-paragraph plain-language summary of the allocation equation, distilled
@@ -36,14 +37,21 @@ function constraintColor(c: string): string {
   return "gray";
 }
 
-export function Step2Model({ optimizer }: Step2ModelProps) {
+export function Step2Model({ optimizer, live }: Step2ModelProps) {
   return (
     <Card withBorder radius="md" padding="lg">
       <Group justify="space-between" mb="xs">
         <Title order={4}>2. The optimizer (runs inside the TEE)</Title>
-        <Badge variant="light" color="grape">
-          risk-adjusted yield max
-        </Badge>
+        <Group gap="xs">
+          {live && (
+            <Badge variant="filled" color="pink">
+              computed in-browser this cycle
+            </Badge>
+          )}
+          <Badge variant="light" color="grape">
+            risk-adjusted yield max
+          </Badge>
+        </Group>
       </Group>
 
       {!optimizer && (

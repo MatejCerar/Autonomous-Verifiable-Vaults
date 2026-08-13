@@ -1,30 +1,45 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
-  Badge,
+  Button,
+  Card,
   Center,
   Container,
   Group,
   Loader,
+  NumberInput,
   Stack,
   Stepper,
   Text,
+  TextInput,
   Title,
 } from "@mantine/core";
+import type { Hex } from "viem";
 import { addresses } from "@/addresses";
 import { loadAll, type DemoData } from "@/data";
+import { runCycle, type CycleResult } from "@/live";
 import { Step1Inputs } from "@/components/Step1Inputs";
 import { Step2Model } from "@/components/Step2Model";
 import { Step3Plan } from "@/components/Step3Plan";
 import { Step4Validation, type Scenario } from "@/components/Step4Validation";
 import { Step5Execution } from "@/components/Step5Execution";
-import { Step6Nav } from "@/components/Step6Nav";
 
 export function App() {
+  // Static initial state (offline artifacts): shown before the first cycle and
+  // used as the fallback for the "bad plan" scenarios in Step 4.
   const [data, setData] = useState<DemoData>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
   const [scenario, setScenario] = useState<Scenario>("good");
+
+  // Live cycle state (drives Steps 1/2/3/5 once the button is clicked).
+  const [cycle, setCycle] = useState<CycleResult>();
+  const [cycleLoading, setCycleLoading] = useState(false);
+  const [cycleError, setCycleError] = useState<string>();
+  const [capital, setCapital] = useState<number>(1_000_000);
+  const [receiver, setReceiver] = useState<string>(
+    "0x0000000000000000000000000000000000000001",
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -42,6 +57,25 @@ export function App() {
     void load();
   }, [load]);
 
+  const startCycle = useCallback(async () => {
+    setCycleLoading(true);
+    setCycleError(undefined);
+    try {
+      const r = await runCycle({ capital, receiver: receiver as Hex });
+      setCycle(r);
+    } catch (e) {
+      setCycleError((e as Error).message ?? String(e));
+    } finally {
+      setCycleLoading(false);
+    }
+  }, [capital, receiver]);
+
+  // Prefer the live cycle output; fall back to the static artifacts.
+  const market = cycle?.market ?? data?.market;
+  const optimizer = cycle?.optimizer ?? data?.optimizer;
+  const envelope = cycle?.envelope ?? data?.envelope;
+  const bundle = cycle?.bundle ?? data?.bundle;
+
   return (
     <Container size="md" py="xl">
       <Stack gap="lg">
@@ -53,17 +87,63 @@ export function App() {
               {addresses.network} (chainId {addresses.chainId})
             </Text>
           </div>
-          <Badge color="orange" variant="light" size="lg">
-            prepared, not broadcast
-          </Badge>
         </Group>
 
-        <Alert color="orange" title="This walkthrough is not executed on-chain">
-          Mystic is Flare mainnet only, so this demo does not sign or broadcast.
-          Steps 1-4 use live market data, the optimizer output and the TEE
-          signature; step 5 shows the prepared (unsigned) transactions ready to
-          sign later.
-        </Alert>
+        <Card withBorder radius="md" padding="lg" bg="rgba(254,37,109,0.04)">
+          <Group justify="space-between" align="flex-end" wrap="wrap" gap="md">
+            <div>
+              <Title order={4}>Run a live allocation cycle</Title>
+              <Text size="sm" c="dimmed" maw={520}>
+                Each click reads the live market on Flare mainnet (FTSO prices +
+                vault state on-chain, APY/TVL from DefiLlama), runs the optimizer
+                in your browser, and builds the prepared transactions. The
+                numbers move because the inputs move. Nothing is broadcast.
+              </Text>
+            </div>
+            <Group align="flex-end" gap="sm">
+              <NumberInput
+                label="capital (USD)"
+                value={capital}
+                onChange={(v) => setCapital(typeof v === "number" ? v : 1_000_000)}
+                min={1000}
+                step={100_000}
+                thousandSeparator=","
+                w={170}
+                disabled={cycleLoading}
+              />
+              <Button
+                size="md"
+                color="pink"
+                onClick={() => void startCycle()}
+                loading={cycleLoading}
+              >
+                {cycle ? "Run cycle again" : "Start cycle"}
+              </Button>
+            </Group>
+          </Group>
+
+          <TextInput
+            label="receiver (labeled placeholder)"
+            value={receiver}
+            onChange={(e) => setReceiver(e.currentTarget.value)}
+            mt="sm"
+            ff="monospace"
+            size="xs"
+            disabled={cycleLoading}
+          />
+
+          {cycleError && (
+            <Alert color="red" title="Live cycle failed" mt="sm">
+              {cycleError}. The initial view falls back to the offline snapshot.
+            </Alert>
+          )}
+
+          {cycle && !cycleError && (
+            <Text size="xs" c="dimmed" mt="sm" ff="monospace">
+              last cycle at {new Date(cycle.at).toLocaleTimeString()}
+            </Text>
+          )}
+        </Card>
 
         {error && (
           <Alert color="red" title="Failed to load demo data">
@@ -96,11 +176,8 @@ export function App() {
           </Stepper.Step>
           <Stepper.Step
             label="Prepared transactions"
-            description="unsigned, chainId 14"
+            description="Flare mainnet, chainId 14"
           >
-            <></>
-          </Stepper.Step>
-          <Stepper.Step label="Summary" description="real vs simulated">
             <></>
           </Stepper.Step>
         </Stepper>
@@ -117,24 +194,29 @@ export function App() {
         )}
 
         <Stack gap="md">
-          <Step1Inputs market={data?.market} loading={loading} error={error} />
-          <Step2Model optimizer={data?.optimizer} />
-          <Step3Plan envelope={data?.envelope} />
+          <Step1Inputs
+            market={market}
+            loading={loading || cycleLoading}
+            error={error}
+            live={!!cycle}
+          />
+          <Step2Model optimizer={optimizer} live={!!cycle} />
+          <Step3Plan envelope={envelope} live={!!cycle} />
           <Step4Validation
-            envelope={data?.envelope}
+            envelope={envelope}
             envelopeBad={data?.envelopeBad}
             envelopeBadSigner={data?.envelopeBadSigner}
             scenario={scenario}
             onScenario={setScenario}
           />
-          <Step5Execution bundle={data?.bundle} />
-          <Step6Nav data={data} />
+          <Step5Execution bundle={bundle} live={!!cycle} />
         </Stack>
 
         <Center>
           <Text size="xs" c="dimmed">
-            data: /data/*.json (synced from research, optimizer, tee-model,
-            prepared-txs) | protocol: {addresses.protocol}
+            initial data: /data/*.json (offline artifacts). Live cycle: FTSO
+            on-chain + DefiLlama, computed in-browser. protocol:{" "}
+            {addresses.protocol}
           </Text>
         </Center>
       </Stack>

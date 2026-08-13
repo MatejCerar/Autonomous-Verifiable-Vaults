@@ -21,5 +21,4 @@ frontend/public/data/
 # ---- misc ----
 **/*.log
 tee-model/last-plan.json
-scripts/rejection-tx.signed.json
 .DS_Store

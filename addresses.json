@@ -1,5 +1,5 @@
 {
-  "note": "NOT DEPLOYED. This is the mainnet-prepare default (real Mystic Core vaults, no controller). Running a deploy script overwrites this file with the live stack: DeployTestnet.s.sol (Coston2, mock venues) or DeployMystic.s.sol (Flare mainnet, real Mystic).",
+  "note": "NOT DEPLOYED. Mainnet-prepare default (real Mystic Core vaults, no controller). DeployMystic.s.sol overwrites this with the live stack once deployed on Flare mainnet.",
   "chainId": 14,
   "network": "flare",
   "rpcUrl": "https://flare-api.flare.network/ext/C/rpc",

@@ -1,10 +1,10 @@
 {
   "plan": {
-    "planId": "0x74692e819accd1945109edd0b55b6d32d0d48627b08520465cf6ec2837d55a53",
+    "planId": "0x7b642d946131f2c1c9f884940ac918195e827e6215650c80843dbc3ecb72abd5",
     "modelVersion": "1",
     "codeHash": "0x4c1ea64a6a81ce2cae7c1aaff36fcdbc64d9b06608471a1d346a9de1e31763ea",
     "nonce": "0",
-    "expiry": "1786614631",
+    "expiry": "1786619108",
     "totalOut": "1000000000000000000000000",
     "reserveAmount": "583491000000000000000000",
     "allocations": [
@@ -22,8 +22,8 @@
       }
     ]
   },
-  "signature": "0xe1e7da0ae4d9b4a7ccc3b9e5167e8a7ac453927f622b5ef032a8bfbb293b1421556aca1baf62503b3bd256c9236fc4fb94a4b53d7302c31916cdae8e4ea992911c",
-  "inputHash": "0x5f838a103f02fd8455470a084cdb43b41af9ed1f853896447f5524bd17e8b258",
+  "signature": "0x6d93291bdec653540cb33dc5503201d270c9402a80349287dab53a55abd21fc56e8eafbf1b1b810b021de9f3f368f92cd831c2869072597e3b7b2a0df089f34a1b",
+  "inputHash": "0x52591040bc6487af03602e9f2eaec1c83c53f47f114f984ce908697b2292da94",
   "reasonCodes": [
     {
       "venueId": "0",
@@ -42,12 +42,12 @@
     }
   ],
   "inputs": {
-    "flrUsdValue": "596522",
+    "flrUsdValue": "597143",
     "flrUsdDecimals": 8,
-    "flrUsdTimestamp": "1786614328",
-    "xrpUsdValue": "1010745",
+    "flrUsdTimestamp": "1786618804",
+    "xrpUsdValue": "1006501",
     "xrpUsdDecimals": 6,
-    "xrpUsdTimestamp": "1786614328",
+    "xrpUsdTimestamp": "1786618804",
     "marketAsOf": "2026-08-13T07:24:00Z",
     "fresh": true,
     "depeg": false

@@ -16,6 +16,7 @@ import { fmtTimestamp, truncateHex } from "@/format";
 
 export interface Step3PlanProps {
   envelope?: Envelope;
+  live?: boolean;
 }
 
 const VENUE_NAMES: Record<string, string> = {
@@ -24,14 +25,21 @@ const VENUE_NAMES: Record<string, string> = {
   "2": "WFLR",
 };
 
-export function Step3Plan({ envelope }: Step3PlanProps) {
+export function Step3Plan({ envelope, live }: Step3PlanProps) {
   return (
     <Card withBorder radius="md" padding="lg">
       <Group justify="space-between" mb="xs">
         <Title order={4}>3. TEE-signed bounded plan</Title>
-        <Badge variant="light" color="teal">
-          signer = registered TEE key
-        </Badge>
+        <Group gap="xs">
+          {live && (
+            <Badge variant="filled" color="pink">
+              re-signed this cycle
+            </Badge>
+          )}
+          <Badge variant="light" color="teal">
+            signer = registered TEE key
+          </Badge>
+        </Group>
       </Group>
 
       {!envelope && (

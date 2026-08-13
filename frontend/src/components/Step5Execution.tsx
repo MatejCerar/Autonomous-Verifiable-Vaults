@@ -5,11 +5,11 @@ import {
   Button,
   Card,
   Code,
+  CopyButton,
   Group,
   Stack,
   Text,
   Title,
-  Tooltip,
 } from "@mantine/core";
 import type { PreparedBundle, PreparedTx } from "@/data";
 import { addresses, explorerAddressUrl } from "@/addresses";
@@ -17,29 +17,30 @@ import { fmtTokenUnits, fmtUsd, truncateHex } from "@/format";
 
 export interface Step5ExecutionProps {
   bundle?: PreparedBundle;
+  live?: boolean;
 }
 
 function isApprove(tx: PreparedTx): boolean {
   return tx.decoded.fn.startsWith("approve");
 }
 
-export function Step5Execution({ bundle }: Step5ExecutionProps) {
+export function Step5Execution({ bundle, live }: Step5ExecutionProps) {
   return (
     <Card withBorder radius="md" padding="lg">
       <Group justify="space-between" mb="xs">
         <Title order={4}>5. Prepared transactions</Title>
-        <Badge variant="light" color="orange">
-          unsigned | chainId 14
-        </Badge>
+        <Group gap="xs">
+          {live && (
+            <Badge variant="filled" color="pink">
+              built this cycle
+            </Badge>
+          )}
+          <Badge variant="light" color="orange">
+            unsigned | chainId 14
+          </Badge>
+        </Group>
       </Group>
 
-      <Alert color="orange" variant="filled" mb="md" title="PREPARED, NOT BROADCAST">
-        <Text size="sm">
-          Mystic is Flare mainnet only and this demo does not sign or send. The
-          {bundle ? ` ${bundle.transactions.length}` : ""} transactions below are
-          ready to sign and send later. Review before broadcast.
-        </Text>
-      </Alert>
 
       {!bundle && (
         <Text c="dimmed" size="sm">
@@ -134,11 +135,33 @@ export function Step5Execution({ bundle }: Step5ExecutionProps) {
                     ))}
                   </Stack>
                 </Group>
-                <Tooltip label={tx.data} multiline w={360} withArrow>
-                  <Text size="xs" c="dimmed" mt={4} ff="monospace">
-                    calldata {truncateHex(tx.data, 12, 8)}
+                <Group gap="xs" mt={4} align="flex-start" wrap="nowrap">
+                  <Text size="xs" c="dimmed" w={40}>
+                    data
                   </Text>
-                </Tooltip>
+                  <Code
+                    fz="xs"
+                    style={{
+                      wordBreak: "break-all",
+                      whiteSpace: "normal",
+                      flex: 1,
+                    }}
+                  >
+                    {tx.data}
+                  </Code>
+                  <CopyButton value={tx.data}>
+                    {({ copied, copy }) => (
+                      <Button
+                        size="compact-xs"
+                        variant="light"
+                        color={copied ? "teal" : "gray"}
+                        onClick={copy}
+                      >
+                        {copied ? "copied" : "copy"}
+                      </Button>
+                    )}
+                  </CopyButton>
+                </Group>
               </Card>
             ))}
           </Stack>
@@ -164,20 +187,9 @@ export function Step5Execution({ bundle }: Step5ExecutionProps) {
             </Alert>
           )}
 
-          <Group>
-            <Tooltip
-              label="Disabled: this demo does not broadcast. Mystic is Flare mainnet only."
-              withArrow
-            >
-              <Button color="gray" disabled>
-                Sign and send (disabled)
-              </Button>
-            </Tooltip>
-            <Text size="xs" c="dimmed">
-              No wallet is connected. Export the bundle and sign it in a
-              reviewed environment against {addresses.network}.
-            </Text>
-          </Group>
+          <Text size="xs" c="dimmed">
+            Sign these with your key to submit them on {addresses.network}.
+          </Text>
         </Stack>
       )}
     </Card>

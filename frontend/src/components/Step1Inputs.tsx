@@ -16,6 +16,7 @@ export interface Step1InputsProps {
   market?: MarketData;
   loading: boolean;
   error?: string;
+  live?: boolean;
 }
 
 // Highest APY across venues, used to scale the APY bars.
@@ -23,14 +24,26 @@ function apyMax(m: MarketData): number {
   return Math.max(...m.assets.map((a) => a.supplyApy), 0.01);
 }
 
-export function Step1Inputs({ market, loading, error }: Step1InputsProps) {
+export function Step1Inputs({
+  market,
+  loading,
+  error,
+  live,
+}: Step1InputsProps) {
   return (
     <Card withBorder radius="md" padding="lg">
       <Group justify="space-between" mb="xs">
         <Title order={4}>1. Live market inputs</Title>
-        <Badge variant="light" color="gray">
-          Mystic / Morpho on Flare (chainId 14)
-        </Badge>
+        <Group gap="xs">
+          {live && (
+            <Badge variant="filled" color="pink">
+              LIVE this cycle
+            </Badge>
+          )}
+          <Badge variant="light" color="gray">
+            Mystic / Morpho on Flare (chainId 14)
+          </Badge>
+        </Group>
       </Group>
 
       {error && (
