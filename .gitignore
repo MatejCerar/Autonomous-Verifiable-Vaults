@@ -14,6 +14,7 @@ TEE/
 # `forge build` works from a clean checkout with no extra install step.
 **/node_modules/
 **/dist/
+**/*.tsbuildinfo
 contracts/out/
 contracts/cache/
 contracts/broadcast/
@@ -22,4 +23,5 @@ frontend/public/data/
 # ---- misc ----
 **/*.log
 tee-model/last-plan.json
+scripts/rejection-tx.signed.json
 .DS_Store

@@ -17,6 +17,7 @@ const MAP = [
   ["optimizer/result.json", "result.json"],
   ["tee-model/sample-envelope.json", "envelope.json"],
   ["tee-model/sample-envelope-bad.json", "envelope-bad.json"],
+  ["tee-model/sample-envelope-badsigner.json", "envelope-badsigner.json"],
   ["prepared-txs/bundle.json", "prepared-bundle.json"],
 ];
 

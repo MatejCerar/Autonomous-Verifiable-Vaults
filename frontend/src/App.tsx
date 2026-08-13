@@ -16,7 +16,7 @@ import { loadAll, type DemoData } from "@/data";
 import { Step1Inputs } from "@/components/Step1Inputs";
 import { Step2Model } from "@/components/Step2Model";
 import { Step3Plan } from "@/components/Step3Plan";
-import { Step4Validation } from "@/components/Step4Validation";
+import { Step4Validation, type Scenario } from "@/components/Step4Validation";
 import { Step5Execution } from "@/components/Step5Execution";
 import { Step6Nav } from "@/components/Step6Nav";
 
@@ -24,7 +24,7 @@ export function App() {
   const [data, setData] = useState<DemoData>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
-  const [showBad, setShowBad] = useState(false);
+  const [scenario, setScenario] = useState<Scenario>("good");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -90,7 +90,7 @@ export function App() {
           </Stepper.Step>
           <Stepper.Step
             label="Mandate validation"
-            description="caps enforced"
+            description="caps + signer enforced"
           >
             <></>
           </Stepper.Step>
@@ -123,8 +123,9 @@ export function App() {
           <Step4Validation
             envelope={data?.envelope}
             envelopeBad={data?.envelopeBad}
-            showBad={showBad}
-            onToggle={setShowBad}
+            envelopeBadSigner={data?.envelopeBadSigner}
+            scenario={scenario}
+            onScenario={setScenario}
           />
           <Step5Execution bundle={data?.bundle} />
           <Step6Nav data={data} />

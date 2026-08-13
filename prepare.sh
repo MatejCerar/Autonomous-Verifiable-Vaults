@@ -20,6 +20,7 @@ echo; echo "==> [3/4] TEE model: sign the bounded plan + verify the signature"
 ( cd tee-model \
   && npm run --silent run > sample-envelope.json \
   && npm run --silent run -- --bad=overcap > sample-envelope-bad.json \
+  && npm run --silent run -- --bad=badsigner > sample-envelope-badsigner.json \
   && npm run --silent selftest \
   && node verify-envelope.mjs )
 

@@ -21,6 +21,7 @@ const REAL: string[] = [
   "The optimizer: risk-adjusted water-filling under caps, actual weights and reserve",
   "The TEE signature: a real EIP-191 signature over the bounded plan (planId, nonce, expiry, allocations)",
   "Cap enforcement: the mandate checks (30% venue, 80% total-out, 20% reserve floor) evaluated exactly as on-chain",
+  "Signed-rejection proof: an in-mandate plan signed by the wrong enclave is rejected with 'bad signer' (verify, don't trust); the browser recovers the signer from the exact planHash the contract checks",
   "Real calldata: 6 unsigned Flare-mainnet transactions (approve + deposit per venue) with decoded args",
 ];
 

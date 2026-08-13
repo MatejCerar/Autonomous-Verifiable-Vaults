@@ -26,6 +26,11 @@ export interface Addresses {
   ftsoV2: string;
   morphoBlue: string;
   adaptiveCurveIrm: string;
+  // CurationController used for planHash domain separation. Empty in the
+  // mainnet-prepare default (not deployed); a deploy overwrites addresses.json.
+  // The offline sample envelopes are signed against this value, so the browser
+  // reproduces the exact planHash for the signer recovery.
+  curationController: string;
   venues: VenueAddresses[];
 }
 
@@ -39,6 +44,7 @@ export const addresses: Addresses = {
   ftsoV2: "0x7BDE3Df0624114eDB3A67dFe6753e62f4e7c1d20",
   morphoBlue: "0xF4346F5132e810f80a28487a79c7559d9797E8B0",
   adaptiveCurveIrm: "0xE5B5627C5973AfAE1928a6b8e5c1D6AABFEC8a7a",
+  curationController: "",
   venues: [
     {
       symbol: "FXRP",
