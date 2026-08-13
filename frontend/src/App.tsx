@@ -21,16 +21,14 @@ import { runCycle, type CycleResult } from "@/live";
 import { Step1Inputs } from "@/components/Step1Inputs";
 import { Step2Model } from "@/components/Step2Model";
 import { Step3Plan } from "@/components/Step3Plan";
-import { Step4Validation, type Scenario } from "@/components/Step4Validation";
+import { Step4Validation } from "@/components/Step4Validation";
 import { Step5Execution } from "@/components/Step5Execution";
 
 export function App() {
-  // Static initial state (offline artifacts): shown before the first cycle and
-  // used as the fallback for the "bad plan" scenarios in Step 4.
+  // Static initial state (offline artifacts): shown before the first cycle.
   const [data, setData] = useState<DemoData>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
-  const [scenario, setScenario] = useState<Scenario>("good");
 
   // Live cycle state (drives Steps 1/2/3/5 once the button is clicked).
   const [cycle, setCycle] = useState<CycleResult>();
@@ -202,13 +200,7 @@ export function App() {
           />
           <Step2Model optimizer={optimizer} live={!!cycle} />
           <Step3Plan envelope={envelope} live={!!cycle} />
-          <Step4Validation
-            envelope={envelope}
-            envelopeBad={data?.envelopeBad}
-            envelopeBadSigner={data?.envelopeBadSigner}
-            scenario={scenario}
-            onScenario={setScenario}
-          />
+          <Step4Validation envelope={envelope} />
           <Step5Execution bundle={bundle} live={!!cycle} />
         </Stack>
 

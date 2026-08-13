@@ -240,12 +240,6 @@ export async function loadOptimizerResult(): Promise<OptimizerResult> {
 export async function loadEnvelope(): Promise<Envelope> {
   return envelopeSchema.parse(await getJson("/data/envelope.json"));
 }
-export async function loadEnvelopeBad(): Promise<Envelope> {
-  return envelopeSchema.parse(await getJson("/data/envelope-bad.json"));
-}
-export async function loadEnvelopeBadSigner(): Promise<Envelope> {
-  return envelopeSchema.parse(await getJson("/data/envelope-badsigner.json"));
-}
 export async function loadPreparedBundle(): Promise<PreparedBundle> {
   return preparedBundleSchema.parse(await getJson("/data/prepared-bundle.json"));
 }
@@ -254,27 +248,15 @@ export interface DemoData {
   market: MarketData;
   optimizer: OptimizerResult;
   envelope: Envelope;
-  envelopeBad: Envelope;
-  envelopeBadSigner: Envelope;
   bundle: PreparedBundle;
 }
 
 export async function loadAll(): Promise<DemoData> {
-  const [market, optimizer, envelope, envelopeBad, envelopeBadSigner, bundle] =
-    await Promise.all([
-      loadMarketData(),
-      loadOptimizerResult(),
-      loadEnvelope(),
-      loadEnvelopeBad(),
-      loadEnvelopeBadSigner(),
-      loadPreparedBundle(),
-    ]);
-  return {
-    market,
-    optimizer,
-    envelope,
-    envelopeBad,
-    envelopeBadSigner,
-    bundle,
-  };
+  const [market, optimizer, envelope, bundle] = await Promise.all([
+    loadMarketData(),
+    loadOptimizerResult(),
+    loadEnvelope(),
+    loadPreparedBundle(),
+  ]);
+  return { market, optimizer, envelope, bundle };
 }

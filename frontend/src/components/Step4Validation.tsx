@@ -1,14 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Badge,
-  Card,
-  Code,
-  Group,
-  SegmentedControl,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Badge, Card, Code, Group, Stack, Text, Title } from "@mantine/core";
 import type { Envelope } from "@/data";
 import {
   deriveMandateRef,
@@ -19,14 +10,8 @@ import {
 } from "@/mandate";
 import { fmtBips } from "@/format";
 
-export type Scenario = "good" | "overcap" | "badsigner";
-
 export interface Step4ValidationProps {
   envelope?: Envelope;
-  envelopeBad?: Envelope;
-  envelopeBadSigner?: Envelope;
-  scenario: Scenario;
-  onScenario: (s: Scenario) => void;
 }
 
 function glyph(state: CheckState): { color: string; text: string } {
@@ -40,28 +25,10 @@ function glyph(state: CheckState): { color: string; text: string } {
   }
 }
 
-const SCENARIO_NOTE: Record<Scenario, string> = {
-  good: "Every allocation is within its cap, total deployed stays under 80%, reserve holds above its 20% floor, and the plan is signed by the registered TEE enclave. The signed plan is accepted.",
-  overcap:
-    "The controller reverts on the first failing check before releasing any funds. This plan over-allocates venue #0 (FXRP) to 40% of budget, tripping the 30% venue cap; no capital moves.",
-  badsigner:
-    "Verify, don't trust: this plan is perfectly in-mandate (every cap satisfied, reserve above floor, valid fingerprint), yet it is REJECTED because it was signed by an enclave key that is NOT the one registered in the mandate. Even a flawless plan from the wrong enclave releases no funds.",
-};
+const NOTE =
+  "Every allocation is within its cap, total deployed stays under 80%, reserve holds above its 20% floor, and the plan is signed by the registered TEE enclave. The signed plan is accepted.";
 
-export function Step4Validation({
-  envelope,
-  envelopeBad,
-  envelopeBadSigner,
-  scenario,
-  onScenario,
-}: Step4ValidationProps) {
-  const active =
-    scenario === "overcap"
-      ? envelopeBad
-      : scenario === "badsigner"
-        ? envelopeBadSigner
-        : envelope;
-
+export function Step4Validation({ envelope }: Step4ValidationProps) {
   const [result, setResult] = useState<MandateResult>();
   const [evalError, setEvalError] = useState<string>();
 
@@ -69,13 +36,13 @@ export function Step4Validation({
     let cancelled = false;
     setResult(undefined);
     setEvalError(undefined);
-    if (!envelope || !active) return;
+    if (!envelope) return;
     (async () => {
       try {
-        // The valid envelope defines the mandate reference: its signer is the
+        // The signed envelope defines the mandate reference: its signer is the
         // registered TEE enclave and its codeHash is the enabled fingerprint.
         const ref = await deriveMandateRef(envelope);
-        const r = await evaluateMandate(active, ref);
+        const r = await evaluateMandate(envelope, ref);
         if (!cancelled) setResult(r);
       } catch (e) {
         if (!cancelled) setEvalError((e as Error).message ?? String(e));
@@ -84,7 +51,7 @@ export function Step4Validation({
     return () => {
       cancelled = true;
     };
-  }, [envelope, active]);
+  }, [envelope]);
 
   return (
     <Card withBorder radius="md" padding="lg">
@@ -102,27 +69,11 @@ export function Step4Validation({
           ))}
       </Group>
 
-      <Group justify="space-between" mb="sm">
-        <Text size="sm" c="dimmed">
-          caps: venue {fmtBips(MANDATE.venueCapBips)} | total-out{" "}
-          {fmtBips(MANDATE.maxTotalOutBips)} | reserve floor{" "}
-          {fmtBips(MANDATE.minReserveBips)}
-        </Text>
-        <SegmentedControl
-          size="xs"
-          value={scenario}
-          onChange={(v) => onScenario(v as Scenario)}
-          data={[
-            { label: "signed plan", value: "good" },
-            { label: "over-cap", value: "overcap", disabled: !envelopeBad },
-            {
-              label: "bad signer",
-              value: "badsigner",
-              disabled: !envelopeBadSigner,
-            },
-          ]}
-        />
-      </Group>
+      <Text size="sm" c="dimmed" mb="sm">
+        caps: venue {fmtBips(MANDATE.venueCapBips)} | total-out{" "}
+        {fmtBips(MANDATE.maxTotalOutBips)} | reserve floor{" "}
+        {fmtBips(MANDATE.minReserveBips)}
+      </Text>
 
       {evalError && (
         <Text c="red" size="sm">
@@ -167,7 +118,7 @@ export function Step4Validation({
 
       {result && (
         <Text size="xs" c="dimmed" mt="sm">
-          {SCENARIO_NOTE[scenario]}
+          {NOTE}
         </Text>
       )}
     </Card>
