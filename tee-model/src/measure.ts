@@ -16,9 +16,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function readModelBytes(): {bytes: Uint8Array; source: string} {
     // Built artifact first (matches "bytes of the compiled model module").
-    const distPath = join(__dirname, "..", "dist", "model.js");
-    if (existsSync(distPath)) {
-        return {bytes: readFileSync(distPath), source: distPath};
+    // The optimizer lives outside src/, so tsc infers a wider rootDir and emits
+    // to dist/tee-model/src/model.js; keep the flat dist/model.js path too.
+    const distCandidates = [
+        join(__dirname, "..", "dist", "tee-model", "src", "model.js"),
+        join(__dirname, "..", "dist", "model.js"),
+    ];
+    for (const distPath of distCandidates) {
+        if (existsSync(distPath)) {
+            return {bytes: readFileSync(distPath), source: distPath};
+        }
     }
     // Canonical source fallback (tsx / dev run).
     const srcPath = join(__dirname, "model.ts");

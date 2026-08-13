@@ -17,7 +17,7 @@ import {
 import {privateKeyToAccount} from "viem/accounts";
 import {buildAttestation} from "./attestation.js";
 import {computeInputHash} from "./commit.js";
-import {BIPS_DENOM, MODEL} from "./config.js";
+import {BIPS_DENOM, CAPITAL_WEI, MODEL} from "./config.js";
 import {readInputs} from "./inputs.js";
 import {runModel} from "./model.js";
 import {
@@ -88,10 +88,12 @@ export async function buildBadEnvelope(
 
     switch (kind) {
         case "overcap": {
-            // Inflate one allocation beyond the venue cap. If the (defensive)
-            // model produced no allocations, synthesise one.
-            const venueCap = (inputs.tvl * MODEL.VENUE_CAP_BIPS) / BIPS_DENOM;
-            const over = venueCap + venueCap / 2n + 1n; // 1.5x cap
+            // Inflate one allocation to ~40% of capital, over the 30% venue cap
+            // (venueCapBips 3000). On-chain this trips "over venue cap". If the
+            // (defensive) model produced no allocations, synthesise one for FXRP.
+            const venueCap = (CAPITAL_WEI * MODEL.VENUE_CAP_BIPS) / BIPS_DENOM;
+            const over = (CAPITAL_WEI * 4000n) / BIPS_DENOM; // 40% of capital
+            void venueCap;
             const allocations =
                 base.allocations.length > 0
                     ? base.allocations.map((a, i) =>

@@ -1,0 +1,211 @@
+{
+  "header": {
+    "asOf": "2026-08-13T07:24:00Z",
+    "builtAt": "2026-08-13T08:39:20.385Z",
+    "chainId": 14,
+    "chainName": "Flare mainnet",
+    "capitalUsd": 1000000,
+    "weightsSource": "optimizer/result.json",
+    "priceSource": "research/market-data.json",
+    "receiver": "0x0000000000000000000000000000000000000001",
+    "receiverNote": "Placeholder curator address 0x00..01. Replace with the deployed CurationController / curator EOA before broadcast.",
+    "sender": "{{SENDER}}",
+    "note": "UNSIGNED - prepared, not broadcast. Flare MAINNET (chainId 14). Review before signing.",
+    "reserveFraction": 0.583491,
+    "reserveUsdUndeployed": 583491,
+    "prices": {
+      "FXRP": {
+        "priceUsd": 1.013054,
+        "decimals": 6
+      },
+      "USDT0": {
+        "priceUsd": 1,
+        "decimals": 6
+      },
+      "WFLR": {
+        "priceUsd": 0.0059951,
+        "decimals": 18
+      }
+    },
+    "tokenAmounts": {
+      "FXRP": {
+        "venueId": 0,
+        "weight": 0.08475,
+        "amountUsd": 84750,
+        "priceUsd": 1.013054,
+        "decimals": 6,
+        "tokenAmount": "83657929389"
+      },
+      "USDT0": {
+        "venueId": 1,
+        "weight": 0.3,
+        "amountUsd": 300000,
+        "priceUsd": 1,
+        "decimals": 6,
+        "tokenAmount": "300000000000"
+      },
+      "WFLR": {
+        "venueId": 2,
+        "weight": 0.031759,
+        "amountUsd": 31759.000000000004,
+        "priceUsd": 0.0059951,
+        "decimals": 18,
+        "tokenAmount": "5297492952577939257025718"
+      }
+    },
+    "sanity": {
+      "capitalUsd": 1000000,
+      "reserveFraction": 0.583491,
+      "reserveUsd": 583491,
+      "sumWeights": 0.41650899999999996,
+      "deployedUsdSum": 416509,
+      "expectedDeployedUsdFromReserve": 416509,
+      "deployedVsReserveDriftUsd": 0,
+      "driftWithinTolerance": true
+    },
+    "crosscheck": [
+      {
+        "symbol": "FXRP",
+        "optimizerTokenAmount": 83657.92939,
+        "rebuiltWholeTokens": 83657.929389,
+        "rebuiltBaseUnits": "83657929389",
+        "absDiffWholeTokens": 0.00000100000761449337
+      },
+      {
+        "symbol": "USDT0",
+        "optimizerTokenAmount": 300000,
+        "rebuiltWholeTokens": 300000,
+        "rebuiltBaseUnits": "300000000000",
+        "absDiffWholeTokens": 0
+      },
+      {
+        "symbol": "WFLR",
+        "optimizerTokenAmount": 5297492.952578,
+        "rebuiltWholeTokens": 5297492.952577939,
+        "rebuiltBaseUnits": "5297492952577939257025718",
+        "absDiffWholeTokens": 6.05359673500061e-8
+      }
+    ],
+    "conventions": {
+      "venueIds": {
+        "0": "FXRP",
+        "1": "USDT0",
+        "2": "WFLR"
+      },
+      "approveSelector": "0x095ea7b3",
+      "depositSelector": "0x6e553f65",
+      "ordering": "per venue: approve (token) then deposit (vault); venues in id order 0,1,2"
+    },
+    "swapPrerequisite": "Capital is USD notional. Acquiring FXRP and WFLR from a stable (e.g. USDT0) requires a DEX swap FIRST (SparkDEX / Enosys on Flare). Router calldata is NOT included here (not verified). USDT0 deposit needs no swap."
+  },
+  "transactions": [
+    {
+      "label": "approve FXRP -> Core FXRP vault",
+      "venueId": 0,
+      "symbol": "FXRP",
+      "chainId": 14,
+      "from": "{{SENDER}}",
+      "to": "0xAd552A648C74D49E10027AB8a618A3ad4901c5bE",
+      "value": "0x0",
+      "data": "0x095ea7b300000000000000000000000053184adabf312b490bf1ebcfdc896feff6019a14000000000000000000000000000000000000000000000000000000137a66b2ad",
+      "decoded": {
+        "fn": "approve(address spender,uint256 amount)",
+        "args": {
+          "spender": "0x53184aDaBF312b490BF1EbcFdC896FEfF6019a14",
+          "amount": "83657929389"
+        }
+      },
+      "gasLimitSuggestion": "0xd6d8"
+    },
+    {
+      "label": "deposit FXRP into Core FXRP vault (ERC-4626)",
+      "venueId": 0,
+      "symbol": "FXRP",
+      "chainId": 14,
+      "from": "{{SENDER}}",
+      "to": "0x53184aDaBF312b490BF1EbcFdC896FEfF6019a14",
+      "value": "0x0",
+      "data": "0x6e553f65000000000000000000000000000000000000000000000000000000137a66b2ad0000000000000000000000000000000000000000000000000000000000000001",
+      "decoded": {
+        "fn": "deposit(uint256 assets,address receiver)",
+        "args": {
+          "assets": "83657929389",
+          "receiver": "0x0000000000000000000000000000000000000001"
+        }
+      },
+      "gasLimitSuggestion": "0x493e0"
+    },
+    {
+      "label": "approve USDT0 -> Core USDT0 vault",
+      "venueId": 1,
+      "symbol": "USDT0",
+      "chainId": 14,
+      "from": "{{SENDER}}",
+      "to": "0xe7cd86e13AC4309349F30B3435a9d337750fC82D",
+      "value": "0x0",
+      "data": "0x095ea7b3000000000000000000000000e8dd6a1e13244a27bdaa19ccbf33013647c675d100000000000000000000000000000000000000000000000000000045d964b800",
+      "decoded": {
+        "fn": "approve(address spender,uint256 amount)",
+        "args": {
+          "spender": "0xE8dd6A1e13244A27bDaa19CcBf33013647C675d1",
+          "amount": "300000000000"
+        }
+      },
+      "gasLimitSuggestion": "0xd6d8"
+    },
+    {
+      "label": "deposit USDT0 into Core USDT0 vault (ERC-4626)",
+      "venueId": 1,
+      "symbol": "USDT0",
+      "chainId": 14,
+      "from": "{{SENDER}}",
+      "to": "0xE8dd6A1e13244A27bDaa19CcBf33013647C675d1",
+      "value": "0x0",
+      "data": "0x6e553f6500000000000000000000000000000000000000000000000000000045d964b8000000000000000000000000000000000000000000000000000000000000000001",
+      "decoded": {
+        "fn": "deposit(uint256 assets,address receiver)",
+        "args": {
+          "assets": "300000000000",
+          "receiver": "0x0000000000000000000000000000000000000001"
+        }
+      },
+      "gasLimitSuggestion": "0x493e0"
+    },
+    {
+      "label": "approve WFLR -> Core WFLR vault",
+      "venueId": 2,
+      "symbol": "WFLR",
+      "chainId": 14,
+      "from": "{{SENDER}}",
+      "to": "0x1D80c49BbBCd1C0911346656B529DF9E5c2F783d",
+      "value": "0x0",
+      "data": "0x095ea7b30000000000000000000000001aeada3c251215f1294720b80fcb3d1d005f35850000000000000000000000000000000000000000000461c9ab1bf90fdb19e4b6",
+      "decoded": {
+        "fn": "approve(address spender,uint256 amount)",
+        "args": {
+          "spender": "0x1aEadA3C251215f1294720B80FcB3D1D005F3585",
+          "amount": "5297492952577939257025718"
+        }
+      },
+      "gasLimitSuggestion": "0xd6d8"
+    },
+    {
+      "label": "deposit WFLR into Core WFLR vault (ERC-4626)",
+      "venueId": 2,
+      "symbol": "WFLR",
+      "chainId": 14,
+      "from": "{{SENDER}}",
+      "to": "0x1aEadA3C251215f1294720B80FcB3D1D005F3585",
+      "value": "0x0",
+      "data": "0x6e553f650000000000000000000000000000000000000000000461c9ab1bf90fdb19e4b60000000000000000000000000000000000000000000000000000000000000001",
+      "decoded": {
+        "fn": "deposit(uint256 assets,address receiver)",
+        "args": {
+          "assets": "5297492952577939257025718",
+          "receiver": "0x0000000000000000000000000000000000000001"
+        }
+      },
+      "gasLimitSuggestion": "0x493e0"
+    }
+  ]
+}

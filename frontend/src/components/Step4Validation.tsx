@@ -1,93 +1,124 @@
-import { Anchor, Badge, Card, Code, Group, Stack, Text, Title } from "@mantine/core";
-import type { ExecuteResult } from "@/execute";
-import { VALIDATION_CHECKS, checkStates, type CheckState } from "@/steps";
-import { truncateHex } from "@/format";
+import {
+  Badge,
+  Card,
+  Code,
+  Group,
+  SegmentedControl,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+import type { Envelope } from "@/data";
+import { evaluateMandate, MANDATE, type CheckState } from "@/mandate";
+import { fmtBips } from "@/format";
 
 export interface Step4ValidationProps {
-  result?: ExecuteResult;
-  ran: boolean;
+  envelope?: Envelope;
+  envelopeBad?: Envelope;
+  showBad: boolean;
+  onToggle: (bad: boolean) => void;
 }
 
-function dot(state: CheckState): { color: string; glyph: string } {
+function glyph(state: CheckState): { color: string; text: string } {
   switch (state) {
     case "pass":
-      return { color: "teal", glyph: "PASS" };
+      return { color: "teal", text: "PASS" };
     case "fail":
-      return { color: "red", glyph: "REJECT" };
+      return { color: "red", text: "REJECT" };
     default:
-      return { color: "gray", glyph: "-" };
+      return { color: "gray", text: "-" };
   }
 }
 
-export function Step4Validation({ result, ran }: Step4ValidationProps) {
-  const states = checkStates(result?.revert, ran);
-  const rejected = ran && result && !result.ok;
+export function Step4Validation({
+  envelope,
+  envelopeBad,
+  showBad,
+  onToggle,
+}: Step4ValidationProps) {
+  const active = showBad ? envelopeBad : envelope;
+  const result = active ? evaluateMandate(active) : undefined;
 
   return (
     <Card withBorder radius="md" padding="lg">
       <Group justify="space-between" mb="xs">
-        <Title order={4}>4. On-chain validation</Title>
-        {ran && result?.ok && (
-          <Badge color="teal" variant="filled">
-            all checks passed
-          </Badge>
-        )}
-        {rejected && (
-          <Badge color="red" variant="filled">
-            REJECTED{result?.revert ? `: "${result.revert}"` : ""}
-          </Badge>
-        )}
+        <Title order={4}>4. On-chain mandate validation</Title>
+        {result &&
+          (result.reject ? (
+            <Badge color="red" variant="filled">
+              REJECTED: "{result.reject}"
+            </Badge>
+          ) : (
+            <Badge color="teal" variant="filled">
+              all checks passed
+            </Badge>
+          ))}
       </Group>
 
-      <Stack gap={6}>
-        {VALIDATION_CHECKS.map((c) => {
-          const d = dot(states[c.reason]);
-          return (
-            <Group key={c.reason} justify="space-between" gap="xs">
-              <Group gap="xs">
-                <Badge
-                  color={d.color}
-                  variant={states[c.reason] === "idle" ? "outline" : "filled"}
-                  w={78}
-                >
-                  {d.glyph}
-                </Badge>
-                <Text
-                  size="sm"
-                  c={states[c.reason] === "fail" ? "red" : undefined}
-                  fw={states[c.reason] === "fail" ? 600 : 400}
-                >
-                  {c.label}
-                </Text>
-              </Group>
-              <Code c="dimmed">{c.reason}</Code>
-            </Group>
-          );
-        })}
-      </Stack>
+      <Group justify="space-between" mb="sm">
+        <Text size="sm" c="dimmed">
+          caps: venue {fmtBips(MANDATE.venueCapBips)} | total-out{" "}
+          {fmtBips(MANDATE.maxTotalOutBips)} | reserve floor{" "}
+          {fmtBips(MANDATE.minReserveBips)}
+        </Text>
+        <SegmentedControl
+          size="xs"
+          value={showBad ? "bad" : "good"}
+          onChange={(v) => onToggle(v === "bad")}
+          data={[
+            { label: "signed plan", value: "good" },
+            { label: "bad plan", value: "bad" },
+          ]}
+          disabled={!envelopeBad}
+        />
+      </Group>
 
-      {ran && result?.ok && result.txHash && (
-        <Text size="xs" c="dimmed" mt="sm">
-          tx:{" "}
-          <Anchor
-            href={`https://coston2-explorer.flare.network/tx/${result.txHash}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Code>{truncateHex(result.txHash, 12, 10)}</Code>
-          </Anchor>{" "}
-          (view on Coston2 explorer; no revert, funds moved atomically)
+      {!result && (
+        <Text c="dimmed" size="sm">
+          loading plan...
         </Text>
       )}
-      {rejected && !result?.revert && result?.error && (
-        <Text size="xs" c="red" mt="sm">
-          {result.error}
+
+      {result && (
+        <Stack gap={6}>
+          {result.rows.map((r) => {
+            const g = glyph(r.state);
+            return (
+              <Group key={r.key} justify="space-between" gap="xs" wrap="nowrap">
+                <Group gap="xs" wrap="nowrap">
+                  <Badge
+                    color={g.color}
+                    variant={r.state === "idle" ? "outline" : "filled"}
+                    w={78}
+                  >
+                    {g.text}
+                  </Badge>
+                  <Text
+                    size="sm"
+                    c={r.state === "fail" ? "red" : undefined}
+                    fw={r.state === "fail" ? 600 : 400}
+                  >
+                    {r.label}
+                  </Text>
+                </Group>
+                <Code c={r.state === "fail" ? "red" : "dimmed"}>{r.detail}</Code>
+              </Group>
+            );
+          })}
+        </Stack>
+      )}
+
+      {result?.reject && (
+        <Text size="xs" c="dimmed" mt="sm">
+          The controller reverts on the first failing check before releasing any
+          funds. The bad plan over-allocates venue #0 (FXRP) to 40% of budget,
+          tripping the 30% venue cap; no capital moves.
         </Text>
       )}
-      {rejected && (
+      {result && !result.reject && (
         <Text size="xs" c="dimmed" mt="sm">
-          reverted before any adapter.allocate: no funds moved, steps 5-6
-          untouched.
+          Every allocation is within its cap, total deployed stays under 80%, and
+          reserve holds above its 20% floor. The signed plan would be accepted.
         </Text>
       )}
     </Card>

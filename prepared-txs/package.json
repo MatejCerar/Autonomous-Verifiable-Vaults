@@ -1,0 +1,13 @@
+{
+  "name": "demo-mystic-prepared-txs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reproducible builder for UNSIGNED Flare-mainnet Mystic Core deposit transactions (prepared, not broadcast).",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "viem": "2.55.13"
+  }
+}

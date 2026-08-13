@@ -1,10 +1,13 @@
 {
-  "name": "automated-curation-frontend",
+  "name": "mystic-allocation-frontend",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "sync-data": "node sync-data.mjs",
+    "predev": "node sync-data.mjs",
     "dev": "vite --port 3000 --host",
+    "prebuild": "node sync-data.mjs",
     "build": "tsc -b && vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview --port 3000"

@@ -39,6 +39,10 @@ export interface Envelope {
         flrUsdValue: string;
         flrUsdDecimals: number;
         flrUsdTimestamp: string;
+        xrpUsdValue: string;
+        xrpUsdDecimals: number;
+        xrpUsdTimestamp: string;
+        marketAsOf: string;
         fresh: boolean;
         depeg: boolean;
     };
@@ -92,6 +96,10 @@ export function buildEnvelope(
             flrUsdValue: inputs.feed.value.toString(),
             flrUsdDecimals: inputs.feed.decimals,
             flrUsdTimestamp: inputs.feed.timestamp.toString(),
+            xrpUsdValue: inputs.xrpFeed.value.toString(),
+            xrpUsdDecimals: inputs.xrpFeed.decimals,
+            xrpUsdTimestamp: inputs.xrpFeed.timestamp.toString(),
+            marketAsOf: inputs.marketAsOf,
             fresh: model.fresh,
             depeg: model.depeg,
         },

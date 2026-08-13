@@ -1,88 +1,108 @@
-import { Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
-import { fmtToken } from "@/format";
-
-export interface NavSnapshot {
-  totalAssets: bigint;
-  sharePrice: bigint;
-}
+import {
+  Badge,
+  Card,
+  Group,
+  List,
+  Stack,
+  Text,
+  ThemeIcon,
+  Title,
+} from "@mantine/core";
+import type { DemoData } from "@/data";
+import { fmtPct, fmtUsd } from "@/format";
 
 export interface Step6NavProps {
-  before?: NavSnapshot;
-  after?: NavSnapshot;
-  active: boolean;
+  data?: DemoData;
 }
 
-export function Step6Nav({ before, after, active }: Step6NavProps) {
-  const delta =
-    before && after ? after.totalAssets - before.totalAssets : undefined;
+const REAL: string[] = [
+  "Live market data: Mystic / Morpho vault + token addresses, TVL, utilization, LLTV, available liquidity",
+  "Live FTSO V2 prices: FLR/USD and XRP/USD read on Flare mainnet",
+  "The optimizer: risk-adjusted water-filling under caps, actual weights and reserve",
+  "The TEE signature: a real EIP-191 signature over the bounded plan (planId, nonce, expiry, allocations)",
+  "Cap enforcement: the mandate checks (30% venue, 80% total-out, 20% reserve floor) evaluated exactly as on-chain",
+  "Real calldata: 6 unsigned Flare-mainnet transactions (approve + deposit per venue) with decoded args",
+];
 
+const SIMULATED: string[] = [
+  "Hardware attestation: the Confidential Space JWT is a stub, not hardware-verified. Swap the signer for a tee-node enclave; contracts are unchanged",
+  "Not broadcast: Mystic is Flare mainnet only, so nothing is signed or sent. The transactions are prepared for later review and signing",
+  "annualizedVol, pairwise correlation and the USDT0 = 1.0 peg are labeled risk-model estimates",
+];
+
+export function Step6Nav({ data }: Step6NavProps) {
   return (
     <Card withBorder radius="md" padding="lg">
       <Group justify="space-between" mb="xs">
-        <Title order={4}>6. NAV after reconcile</Title>
+        <Title order={4}>6. Summary</Title>
         <Badge variant="light" color="gray">
-          vault.totalAssets()
+          real vs simulated
         </Badge>
       </Group>
 
-      {!active || !before || !after ? (
+      {!data ? (
         <Text c="dimmed" size="sm">
-          run a successful cycle to compare NAV before / after
+          loading...
         </Text>
       ) : (
-        <Stack gap="sm">
-          <Group grow>
-            <div>
-              <Text size="xs" c="dimmed">
-                totalAssets before
-              </Text>
-              <Text ff="monospace" size="lg">
-                {fmtToken(before.totalAssets)}
-              </Text>
-            </div>
-            <div>
-              <Text size="xs" c="dimmed">
-                totalAssets after
-              </Text>
-              <Text ff="monospace" size="lg">
-                {fmtToken(after.totalAssets)}
-              </Text>
-            </div>
-            <div>
-              <Text size="xs" c="dimmed">
-                delta
-              </Text>
-              <Text
-                ff="monospace"
-                size="lg"
-                c={delta === 0n ? "dimmed" : delta && delta > 0n ? "teal" : "red"}
-              >
-                {delta !== undefined
-                  ? `${delta >= 0n ? "+" : "-"}${fmtToken(delta < 0n ? -delta : delta)}`
-                  : "-"}
-              </Text>
-            </div>
-          </Group>
+        <Stack gap="md">
           <Group gap="xl">
-            <div>
-              <Text size="xs" c="dimmed">
-                share price before
-              </Text>
-              <Text ff="monospace">{fmtToken(before.sharePrice, 6)}</Text>
-            </div>
-            <div>
-              <Text size="xs" c="dimmed">
-                share price after
-              </Text>
-              <Text ff="monospace">{fmtToken(after.sharePrice, 6)}</Text>
-            </div>
+            <Stat label="capital" value={fmtUsd(data.optimizer.capital)} />
+            <Stat
+              label="deployed"
+              value={fmtPct(1 - data.optimizer.reserve)}
+            />
+            <Stat label="reserve" value={fmtPct(data.optimizer.reserve)} />
+            <Stat
+              label="expected APY"
+              value={fmtPct(data.optimizer.expectedApy)}
+            />
+            <Stat
+              label="prepared txs"
+              value={String(data.bundle.transactions.length)}
+            />
           </Group>
-          <Text size="xs" c="dimmed">
-            NAV-conserving: assets are relocated idle -&gt; venues + reserve, so
-            totalAssets is unchanged by a clean cycle.
-          </Text>
+
+          <div>
+            <Text fw={600} size="sm" mb={4} c="teal">
+              REAL in this demo
+            </Text>
+            <List size="sm" spacing={4} icon={<Dot color="teal" />}>
+              {REAL.map((t) => (
+                <List.Item key={t}>{t}</List.Item>
+              ))}
+            </List>
+          </div>
+
+          <div>
+            <Text fw={600} size="sm" mb={4} c="yellow">
+              SIMULATED / not broadcast
+            </Text>
+            <List size="sm" spacing={4} icon={<Dot color="yellow" />}>
+              {SIMULATED.map((t) => (
+                <List.Item key={t}>{t}</List.Item>
+              ))}
+            </List>
+          </div>
         </Stack>
       )}
     </Card>
+  );
+}
+
+function Dot({ color }: { color: string }) {
+  return <ThemeIcon color={color} size={12} radius="xl" mt={6} />;
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <Text size="xs" c="dimmed">
+        {label}
+      </Text>
+      <Text ff="monospace" fw={600}>
+        {value}
+      </Text>
+    </div>
   );
 }

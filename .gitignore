@@ -10,12 +10,14 @@
 TEE/
 
 # ---- dependencies / build artifacts ----
+# Note: contracts/lib (vendored forge-std + OpenZeppelin, MIT) IS committed so
+# `forge build` works from a clean checkout with no extra install step.
 **/node_modules/
 **/dist/
 contracts/out/
 contracts/cache/
-contracts/lib/
 contracts/broadcast/
+frontend/public/data/
 
 # ---- misc ----
 **/*.log

@@ -1,118 +1,117 @@
 # Automated Curation (Autonomous Verifiable Vaults)
 
-A wrapper that lets a vault curator run their allocation model **inside a TEE**
-(Flare Confidential Compute) and have every rebalance **enforced on-chain**. The
-curator's model stays private. Each cycle it reads its inputs, produces an
-allocation plan, and signs that plan with a key that only exists inside the
-enclave. An on-chain `CurationController` then verifies the signature and the
-model's code fingerprint, checks the plan against the mandate (per-venue caps, a
-reserve floor, a max-deployed cap, freshness, replay/nonce), and only then moves
-funds. Anything outside the mandate reverts before a single token moves. The
-result is autonomous rebalancing you can verify instead of trust.
+A wrapper that lets a vault curator run their allocation model **inside a TEE** and
+have every rebalance **enforced on-chain**. The curator's model stays private. Each
+cycle it reads its inputs, produces an allocation plan, and signs that plan with a key
+that only exists inside the enclave. An on-chain `CurationController` verifies the
+signature and the model's code fingerprint, checks the plan against the mandate
+(per-venue caps, a reserve floor, freshness, replay/nonce), and only then moves funds.
+Anything outside the mandate reverts before a single token moves. The result is
+autonomous rebalancing you can **verify instead of trust**.
 
-This repository is a working proof of concept on **Flare Coston2** (testnet).
-The security and verifiability are real: a real TEE signs, a real contract
-enforces, on a real network, over a live oracle read. The vault, the ERC-20, the
-two "lending venues", and the allocation model itself are deliberate
-**placeholders** so any condition (high utilisation, low liquidity, a bad plan)
-can be triggered on demand. The point is to prove the wrapper; a curator's real
-vault, real markets, and real model plug into those same slots without changing
-the enforcement layer. See `REAL_TEE.md` for what moving to production hardware
-and real markets involves.
+The worked example targets **Mystic Finance** (Morpho on Flare) with three venues:
+FXRP, USDT0, WFLR. You swap in your own model, markets, and mandate at the seams below
+without touching the enforcement layer.
 
-## Run it
+- Full map: `ARCHITECTURE.md`  -  the allocation math: `optimizer/EQUATION.md`
+- Local run: `RUN.md`  -  what is real vs simulated: `STATUS.md`
+- Production hardware attestation: `REAL_TEE.md`
 
-You need **Docker** (Go and Foundry run inside containers) and a funded Coston2
-private key. Node is only needed for the optional browser UI.
+## What is real vs simulated
+
+Real: the on-chain enforcement (signature + code fingerprint + caps, a distinct revert
+per rule), the ERC-4626 venue adapters (fork-tested against the live Mystic Core
+vaults), the allocation optimizer (a deterministic, grid-verified solver), and the
+EIP-191 plan signing. Simulated: only the **hardware root of trust** - the demo signs
+with a throwaway key standing in for the enclave. Wiring a real `tee-node` enclave
+(`REAL_TEE.md`) makes attestation real with no contract change. Nothing here is
+broadcast unless you run a deploy/broadcast script with your own key.
+
+## Run it locally (two terminals)
+
+No chain, no keys. Prerequisites: node 20+, python3, foundry.
+
+```bash
+bash prepare.sh   # optimizer -> prepared txs -> TEE sign+verify -> contracts build
+bash ui.sh        # the six-step walkthrough UI on http://localhost:3000
+```
+
+See `RUN.md`. The UI walks one cycle: live market inputs, the optimizer decision, the
+TEE-signed plan, on-chain cap validation (including a bad-plan rejection), and the
+prepared-but-not-broadcast transactions.
+
+## Deploy it yourself
+
+### Testnet (Coston2, mock venues) - recommended first
+
+Coston2 has no Mystic, so the testnet deploy uses three mock ERC-4626 venues that
+mirror the real structure. You get the full live loop (sign -> enforce -> route) with
+fake money. Get C2FLR from https://faucet.flare.network/coston2.
 
 ```bash
 export PK=0x<your funded Coston2 key>
-bash up.sh          # builds the TEE + model images, starts the TEE, deploys the
-                    # AVV stack on Coston2 wired to that TEE, prints the addresses
+bash scripts/deploy-testnet.sh     # deploys the stack, writes addresses.json
+bash scripts/cycle.sh              # signs a plan and executes one cycle on-chain
+bash scripts/cycle.sh --bad        # watch the chain reject an over-cap plan
 ```
 
-Then start the UI in a terminal you keep open, and open http://127.0.0.1:3000:
+### Proof: an unauthorized enclave is rejected on-chain
+
+The strongest demonstration of the guarantee. A fully valid, in-mandate plan signed by
+the **wrong** enclave key is rejected on-chain with `bad signer` - no funds move.
 
 ```bash
-cd frontend && npm install && npm run dev
+export PK=0x<funded Coston2 key>   # pays gas; the plan is signed by a separate rogue key
+BROADCAST=1 bash scripts/prove-rejection.sh   # produces a real reverted tx + explorer link
 ```
 
-Click **Run cycle**: the model reads its inputs, signs a plan inside the TEE, and
-the contract executes it on Coston2 (the shown tx hash links to the block
-explorer). Cycles are idempotent, so you can run it repeatedly. Click **Run bad
-plan** to watch the contract reject an out-of-mandate plan on-chain. Tear the
-whole stack down with `bash down.sh`.
+See `scripts/SIGNED_REJECTION_PROOF.md`.
 
-## Live knobs (interactive demo, no code changes)
+### Mainnet (Flare, real Mystic)
 
-The venue conditions and the mandate limits are adjustable on-chain, and the
-model reads both fresh every cycle. So you can change a knob between cycles and
-watch the system react. Run these from the demo folder with your deployer key
-exported (it is the venue operator and the registry owner). After each knob,
-click **Run cycle** and watch Step 1 (inputs) and Step 3 (plan) change.
+The venues are the live Mystic Core vaults. Deploy the wrapper with
+`contracts/script/DeployMystic.s.sol`, then either run cycles through the controller or
+use the prepared transactions in `prepared-txs/` for the direct deposits. Deploying the
+wrapper costs only gas; deploying capital is your decision. Review
+`prepared-txs/PREPARED_TX.md` (and the swap prerequisite) before broadcasting.
 
-```bash
-cd   # your demo folder
-export PK=0x<your deployer key>
-RPC=https://coston2-api.flare.network/ext/C/rpc
-V0=$(jq -r '.deployed.mockVenues[0]'   addresses.json)
-MR=$(jq -r '.deployed.mandateRegistry' addresses.json)
-knob(){ docker run --rm -e PK --entrypoint sh ghcr.io/foundry-rs/foundry:latest -c "cast send $1 '$2' $3 --rpc-url $RPC --private-key \$PK"; }
-```
+## Where you plug in (integration seams)
 
-**Demo A - the model adapts to market conditions.** Saturate venue 0 above the
-90% utilisation limit and the model routes away from it:
-
-```bash
-knob $V0 'setUtilisationBips(uint256)' 9500
-# Run cycle -> venue 0 shows "utilisation over max"; allocation shifts to venue 1 + reserve
-knob $V0 'setUtilisationBips(uint256)' 4000     # reset -> venue 0 comes back next cycle
-```
-
-**Demo B - the chain enforces even against its own model.** Tighten venue 0's
-on-chain cap to 10%, below the model's 25% target, and the contract rejects the
-model's own signed plan:
-
-```bash
-knob $MR 'setVenueCapBips(uint256,uint256)' '0 1000'
-# Run cycle -> the model still signs 25% for venue 0, and the contract REVERTS "over venue cap"
-knob $MR 'setVenueCapBips(uint256,uint256)' '0 3000'   # reset cap to 30%
-```
-
-Demo B is the point that lands with a curation firm: the guarantee is
-independent of the model. Even if the curator's model is buggy or compromised
-and tries to breach the mandate, the chain rejects it. Tighten the cap live and
-the model's own plan bounces. Together with the **Run bad plan** button and the
-explorer link, that is a complete story.
+1. **Your model** -> `tee-model/src/model.ts`. Replace the optimizer call. It must emit
+   a `Plan` (allocations `[venueId, amount]` + reserve) and the service signs it per
+   `schema/preimage.md`. The chain trusts only the TEE signer, the model fingerprint
+   (`codeHash`), and the caps - not the model's logic - so your model stays private and
+   still cannot exceed the mandate.
+2. **Your markets** -> `contracts/src/MysticAddresses.sol` + the deploy scripts.
+   `MysticVenueAdapter` works with any ERC-4626 vault; `MockERC4626Vault` is the testnet
+   stand-in.
+3. **Your mandate** -> the caps in the deploy script / `MandateRegistry` (per-venue cap,
+   reserve floor). The binding guards are the 30% per-venue cap and the 20% reserve
+   floor. Tighten them live and the chain rejects even your own model's plan.
+4. **Your TEE** -> swap the simulated signer for a `tee-node` enclave (`REAL_TEE.md`).
+   Contracts are unchanged; only the signer's root of trust becomes hardware-attested.
 
 ## Layout
 
 - `contracts/` - the enforcement layer (Foundry): `CurationController`,
-  `MandateRegistry`, `AutomatedCurationVault` (ERC-4626), and the venue + reserve
-  adapters.
-- `tee-model/` - the allocation model + service that runs inside the TEE and
-  signs plans.
-- `frontend/` - the React UI (a six-step walkthrough of one cycle).
-- `up.sh` / `down.sh` - bring the whole stack up / down (Docker only).
-- `REAL_TEE.md` - how the simulated attestation here becomes real hardware
-  attestation, and how the mocks become real vaults and markets.
+  `MandateRegistry`, `AutomatedCurationVault` (ERC-4626), reserve + venue adapters
+  (`MysticVenueAdapter` for real ERC-4626, `MockLendingVenue`/`MockERC4626Vault` for
+  testnet). Deploy scripts + fork test. Vendored deps are committed, so `forge build`
+  works from a clean clone.
+- `tee-model/` - the model service that runs "inside the TEE" and signs the plan.
+- `optimizer/` - the allocation math and solver (TS + Python).
+- `research/` - the live Mystic market snapshot the example runs over.
+- `prepared-txs/` - unsigned Flare-mainnet transactions for the chosen allocation.
+- `frontend/` - the six-step walkthrough UI.
+- `scripts/` - deploy + run-a-cycle + rejection-proof helpers.
+- `schema/preimage.md` - the FROZEN signed-plan format (the model/chain contract).
 
-## Security note
+## Security
 
-`up.sh` writes your key into `frontend/.env.local` so the browser can submit
-transactions in the demo. That file, and the whole `TEE/` stack, are gitignored
-and must never be committed. This is a testnet demo key; rotate it and never use
-a mainnet key here.
-
-## What are venue 0 and venue 1?
-
-A "venue" is a place the vault can deploy capital to earn yield, for example a
-lending market. This demo has two of them, venue 0 and venue 1, so the model has
-a real allocation decision to make (how much to put in each, and how much to keep
-in reserve) and so you can see it react when the two behave differently. In this
-proof of concept both are `MockLendingVenue` contracts: they stand in for real
-markets and expose knobs (utilisation, available liquidity, depeg) that let us
-simulate any market condition on demand. In production these slots would point at
-real lending markets, and the model, the mandate, and the enforcement layer stay
-exactly the same.
-
+- Hand this off as a **git repo / clean archive**, not a folder copy. `TEE/` and all
+  `.env` files are gitignored and must never ship. Verify with `bash verify-handoff.sh`.
+- All deploy scripts read the private key from the `PK` env var. Never hardcode a key.
+- The demo signer is the well-known Anvil test key: fine for a demo, never for value.
+- The `up.sh` / `down.sh` / docker / `TEE/` path is the optional real-hardware-TEE
+  route; `TEE/` is not shipped (get `tee-node` from Flare's public repos per
+  `REAL_TEE.md`). The default demo above needs none of it.

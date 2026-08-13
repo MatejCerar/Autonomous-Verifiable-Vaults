@@ -1,0 +1,65 @@
+{
+  "plan": {
+    "planId": "0x1ed5453dec70eb8c4f4d045e5c2dbc92011948f0a0545b9a5e59626f3aa18bd6",
+    "modelVersion": "1",
+    "codeHash": "0x4c1ea64a6a81ce2cae7c1aaff36fcdbc64d9b06608471a1d346a9de1e31763ea",
+    "nonce": "0",
+    "expiry": "1786610662",
+    "totalOut": "1315250000000000000000000",
+    "reserveAmount": "583491000000000000000000",
+    "allocations": [
+      {
+        "venueId": "0",
+        "amount": "400000000000000000000000"
+      },
+      {
+        "venueId": "1",
+        "amount": "300000000000000000000000"
+      },
+      {
+        "venueId": "2",
+        "amount": "31759000000000000000000"
+      }
+    ]
+  },
+  "signature": "0xa79c11c683ba73cefdc79280468f41110dc56029c96d443cc41d31485b483b5a05b490284d7ba5e37bb038fcb6185d02560766e1989c1f7e9b72765a06bcdd9d1b",
+  "inputHash": "0x9ef2047038e38cc6796b12967980bba88035c01368a432ed02320cdf0b352ed8",
+  "reasonCodes": [
+    {
+      "venueId": "0",
+      "eligible": true,
+      "reason": "eligible"
+    },
+    {
+      "venueId": "1",
+      "eligible": true,
+      "reason": "eligible"
+    },
+    {
+      "venueId": "2",
+      "eligible": true,
+      "reason": "eligible"
+    }
+  ],
+  "inputs": {
+    "flrUsdValue": "597564",
+    "flrUsdDecimals": 8,
+    "flrUsdTimestamp": "1786610361",
+    "xrpUsdValue": "1011815",
+    "xrpUsdDecimals": 6,
+    "xrpUsdTimestamp": "1786610361",
+    "marketAsOf": "2026-08-13T07:24:00Z",
+    "fresh": true,
+    "depeg": false
+  },
+  "attestation": {
+    "kind": "simulated-confidential-space",
+    "jwt": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIiwia2lkIjoic2ltdWxhdGVkIn0.eyJpc3MiOiJodHRwczovL2NvbmZpZGVudGlhbGNvbXB1dGluZy5nb29nbGVhcGlzLmNvbSIsInN1YiI6InNpbXVsYXRlZC10ZWUtbW9kZWwiLCJod21vZGVsIjoic2ltdWxhdGVkIiwiaW1hZ2VfZGlnZXN0IjoiNGMxZWE2NGE2YTgxY2UyY2FlN2MxYWFmZjM2ZmNkYmM2NGQ5YjA2NjA4NDcxYTFkMzQ2YTlkZTFlMzE3NjNlYSIsInBsYXRmb3JtIjoic2ltdWxhdGVkIn0.stub-not-hardware-verified",
+    "claims": {
+      "image_digest": "4c1ea64a6a81ce2cae7c1aaff36fcdbc64d9b06608471a1d346a9de1e31763ea",
+      "hwmodel": "simulated",
+      "platform": "simulated"
+    },
+    "note": "Attestation is simulated for this PoC. Swap the signer for a tee-node enclave for real attestation; contracts are unchanged."
+  }
+}

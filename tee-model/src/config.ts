@@ -6,10 +6,15 @@ import type {Hex} from "viem";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// demo/tee-model/src -> demo/
+// tee-model/src -> repo root
 export const DEMO_ROOT = join(__dirname, "..", "..");
+// Single source of truth for the active deployment. Ships as the mainnet-prepare
+// default (no controller deployed); a deploy script (DeployTestnet on Coston2 or
+// DeployMystic on Flare mainnet) overwrites addresses.json with the live stack.
 export const ADDRESSES_FILE = join(DEMO_ROOT, "addresses.json");
 export const ABI_DIR = join(DEMO_ROOT, "abi");
+// Live Flare-mainnet Mystic market snapshot the model runs its optimizer over.
+export const MARKET_DATA_FILE = join(DEMO_ROOT, "research", "market-data.json");
 
 export interface Addresses {
     chainId: number;
@@ -17,23 +22,88 @@ export interface Addresses {
     rpcUrl: string;
     contractRegistry: Hex;
     flrUsdFeedId: Hex;
+    xrpUsdFeedId: Hex;
     teeSignerAddress: string;
     modelVersion: string;
     codeHash: string;
     deployed: {
-        mockStable: string;
         vault: string;
         mandateRegistry: string;
         curationController: string;
         reserveAdapter: string;
+        // Live Mystic venue adapters, index-aligned to venue ids 0,1,2.
         venueAdapters: string[];
-        mockVenues: string[];
+        // Live Mystic Core ERC-4626 vaults (asset-state read for eligibility).
+        mysticVaults: string[];
     };
 }
 
+// Canonical venue ordering. MUST match contracts/src/MysticAddresses.sol and
+// contracts/script/DeployMystic.s.sol adapters[] order: 0=FXRP, 1=USDT0, 2=WFLR.
+export const VENUE_COUNT = 3;
+export const VENUE_LABELS = ["FXRP", "USDT0", "WFLR"] as const;
+
+// Flare mainnet (chainId 14) Mystic Core vaults + tokens, from MysticAddresses.sol.
+// Index-aligned to venue ids above. Used as the offline default when no
+// addresses.json is present (mystic contracts not deployed to a local chain).
+export const MYSTIC_VAULTS = [
+    "0x53184aDaBF312b490BF1EbcFdC896FEfF6019a14", // FXRP  Core FXRP
+    "0xE8dd6A1e13244A27bDaa19CcBf33013647C675d1", // USDT0 Core USDT0
+    "0x1aEadA3C251215f1294720B80FcB3D1D005F3585", // WFLR  Core wFLR
+] as const;
+
+// FTSO V2 21-byte feed ids (0x01 category + UTF-8 hex, right zero-padded).
+export const FLR_USD_FEED_ID =
+    "0x01464c522f55534400000000000000000000000000" as Hex; // "FLR/USD"
+export const XRP_USD_FEED_ID =
+    "0x015852502f55534400000000000000000000000000" as Hex; // "XRP/USD"
+
+// Offline default addresses when demo-mystic/addresses.json is absent. The
+// optimizer reads the frozen market snapshot regardless; on-chain reads simply
+// fall back. chainId 14 = Flare mainnet (where Mystic lives).
+export const DEFAULT_ADDRESSES: Addresses = {
+    chainId: 14,
+    network: "flare",
+    rpcUrl: "https://flare-api.flare.network/ext/C/rpc",
+    contractRegistry: "0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019",
+    flrUsdFeedId: FLR_USD_FEED_ID,
+    xrpUsdFeedId: XRP_USD_FEED_ID,
+    teeSignerAddress: "",
+    modelVersion: "1",
+    codeHash: "",
+    deployed: {
+        vault: "",
+        mandateRegistry: "",
+        curationController: "",
+        reserveAdapter: "",
+        venueAdapters: [],
+        mysticVaults: [...MYSTIC_VAULTS],
+    },
+};
+
 export function loadAddresses(): Addresses {
-    const raw = readFileSync(ADDRESSES_FILE, "utf8");
-    return JSON.parse(raw) as Addresses;
+    let parsed: Partial<Addresses> = {};
+    try {
+        parsed = JSON.parse(readFileSync(ADDRESSES_FILE, "utf8")) as Partial<Addresses>;
+    } catch {
+        // No addresses.json (mystic contracts not deployed) -> defaults only.
+        return {...DEFAULT_ADDRESSES};
+    }
+    // Merge over the defaults so feed ids / mystic vaults are always present.
+    const deployed = {
+        ...DEFAULT_ADDRESSES.deployed,
+        ...(parsed.deployed ?? {}),
+    };
+    if (!deployed.mysticVaults || deployed.mysticVaults.length === 0) {
+        deployed.mysticVaults = [...MYSTIC_VAULTS];
+    }
+    return {
+        ...DEFAULT_ADDRESSES,
+        ...parsed,
+        flrUsdFeedId: (parsed.flrUsdFeedId as Hex) ?? FLR_USD_FEED_ID,
+        xrpUsdFeedId: (parsed.xrpUsdFeedId as Hex) ?? XRP_USD_FEED_ID,
+        deployed,
+    };
 }
 
 // Environment. .env is loaded by loadEnv() (no dotenv dependency).
@@ -85,24 +155,31 @@ export const MODEL = {
     // FTSO input older than this (seconds) is treated as stale.
     MAX_STALENESS_SECONDS: 600n,
     // Per-venue eligibility caps (model-side; the on-chain venueCapBips is the
-    // hard limit, clamped separately).
-    MAX_UTIL_BIPS: 9000n, // 90%
+    // hard limit, enforced by the optimizer's own per-venue cap too).
+    MAX_UTIL_BIPS: 9900n, // 99% (Mystic markets run hot; do not gate them out)
     MIN_LIQUIDITY: 1n, // must have some liquidity
-    // Fraction of TVL the model tries to deploy per cycle. Kept under
-    // (maxTotalOut - reserveFloor) so the plan sits comfortably inside caps.
-    TARGET_DEPLOY_BIPS: 5000n, // 50% (25% per venue across two)
-    // Mandatory reserve floor as fraction of TVL. Matches on-chain minReserveBips.
+    // Mandatory reserve floor as fraction of capital. Matches on-chain
+    // minReserveBips AND the optimizer reserveFloor (0.2).
     MIN_RESERVE_BIPS: 2000n, // 20%
-    // Per-venue clamp as fraction of TVL. Matches on-chain venueCapBips so a
-    // good plan always passes the on-chain venue-cap check.
+    // Per-venue clamp as fraction of capital. Matches on-chain venueCapBips AND
+    // the optimizer per-venue cap (0.3) so a good plan always passes on-chain.
     VENUE_CAP_BIPS: 3000n, // 30%
+    // Cap on total deployed (sum of venue weights). Matches optimizer maxTotalOut.
+    MAX_TOTAL_OUT_BIPS: 8000n, // 80%
     // Depeg band: |value/par - 1| <= band. Par is 1.0 in feed units.
     DEPEG_BAND_BIPS: 200n, // 2%
     // Fallback FLR/USD value if the on-chain read fails (never hard-block demo).
-    FALLBACK_VALUE: 2000000n, // 0.0200000 at 7 decimals (arbitrary safe value)
+    // 0.0059951 at 7 decimals, matching the live snapshot in market-data.json.
+    FALLBACK_VALUE: 59951n,
     FALLBACK_DECIMALS: 7,
-    // Fallback TVL when contracts are not deployed (self-test / disconnected).
-    FALLBACK_TVL: 1000000000000000000000n, // 1000e18
+    // Fallback XRP/USD value (1.013054 at 7 decimals) matching the snapshot.
+    FALLBACK_XRP_VALUE: 10130540n,
 } as const;
+
+// Plan accounting unit: USD in 1e18 fixed point (like the demo's 18-dec mock
+// stable). Capital C default = 1,000,000 USD.
+export const CAPITAL_USD = 1_000_000n;
+export const USD_1E18 = 1_000_000_000_000_000_000n;
+export const CAPITAL_WEI = CAPITAL_USD * USD_1E18; // 1000000e18
 
 export const BIPS_DENOM = 10000n;

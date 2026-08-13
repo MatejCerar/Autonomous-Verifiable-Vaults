@@ -1,62 +1,57 @@
-// Minimal ABIs inlined for the demo. The root abi/*.json dir is currently empty;
-// these mirror the frozen contract surfaces (CurationController.executePlan + nonce,
-// AutomatedCurationVault.totalAssets/convertToAssets, VenueAdapter.balanceOf + hardCap,
-// MandateRegistry caps, ReserveAdapter.balanceOf). Read defensively.
+// Minimal ABIs for the Mystic allocation demo. The prepared transactions call
+// ERC-20 approve on each token then ERC-4626 deposit on each Mystic Core vault
+// (Morpho Vault V2). These ABIs are used only to label / decode the prepared
+// calldata for display. Nothing here is broadcast.
+//
+// No emojis, no em dashes in this file (house style).
 
-// Plan tuple matches PlanLib.Plan / preimage.md exactly.
-export const planComponents = [
-  { name: "planId", type: "bytes32" },
-  { name: "modelVersion", type: "uint256" },
-  { name: "codeHash", type: "bytes32" },
-  { name: "nonce", type: "uint256" },
-  { name: "expiry", type: "uint256" },
-  { name: "totalOut", type: "uint256" },
-  { name: "reserveAmount", type: "uint256" },
-  {
-    name: "allocations",
-    type: "tuple[]",
-    components: [
-      { name: "venueId", type: "uint256" },
-      { name: "amount", type: "uint256" },
-    ],
-  },
-] as const;
-
-export const curationControllerAbi = [
+export const erc20Abi = [
   {
     type: "function",
-    name: "executePlan",
+    name: "approve",
     stateMutability: "nonpayable",
     inputs: [
-      { name: "plan", type: "tuple", components: planComponents },
-      { name: "signature", type: "bytes" },
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
     ],
-    outputs: [],
+    outputs: [{ name: "", type: "bool" }],
   },
   {
     type: "function",
-    name: "nonce",
+    name: "balanceOf",
     stateMutability: "view",
-    inputs: [],
+    inputs: [{ name: "account", type: "address" }],
     outputs: [{ name: "", type: "uint256" }],
   },
   {
     type: "function",
-    name: "adapterCount",
+    name: "decimals",
     stateMutability: "view",
     inputs: [],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "adapters",
-    stateMutability: "view",
-    inputs: [{ name: "venueId", type: "uint256" }],
-    outputs: [{ name: "", type: "address" }],
+    outputs: [{ name: "", type: "uint8" }],
   },
 ] as const;
 
-export const vaultAbi = [
+// ERC-4626 tokenized vault surface. Mystic Core vaults are Morpho Vault V2
+// (adapter-based) but expose the standard 4626 deposit(assets, receiver).
+export const erc4626Abi = [
+  {
+    type: "function",
+    name: "deposit",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "assets", type: "uint256" },
+      { name: "receiver", type: "address" },
+    ],
+    outputs: [{ name: "shares", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "asset",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
   {
     type: "function",
     name: "totalAssets",
@@ -66,81 +61,14 @@ export const vaultAbi = [
   },
   {
     type: "function",
-    name: "totalSupply",
+    name: "convertToShares",
     stateMutability: "view",
-    inputs: [],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "convertToAssets",
-    stateMutability: "view",
-    inputs: [{ name: "shares", type: "uint256" }],
+    inputs: [{ name: "assets", type: "uint256" }],
     outputs: [{ name: "", type: "uint256" }],
   },
 ] as const;
 
-export const venueAdapterAbi = [
-  {
-    type: "function",
-    name: "balanceOf",
-    stateMutability: "view",
-    inputs: [{ name: "", type: "address" }],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "hardCap",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "venueId",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-] as const;
-
-export const reserveAdapterAbi = [
-  {
-    type: "function",
-    name: "balanceOf",
-    stateMutability: "view",
-    inputs: [{ name: "", type: "address" }],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-] as const;
-
-export const mandateRegistryAbi = [
-  {
-    type: "function",
-    name: "venueCapBips",
-    stateMutability: "view",
-    inputs: [{ name: "venueId", type: "uint256" }],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "maxTotalOutBips",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "minReserveBips",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ name: "", type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "teeAddress",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ name: "", type: "address" }],
-  },
-] as const;
+export const abis = {
+  erc20: erc20Abi,
+  erc4626: erc4626Abi,
+};

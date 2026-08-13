@@ -1,0 +1,65 @@
+{
+  "asOf": "2026-08-13T07:24:00Z",
+  "chainId": 14,
+  "dataSource": "research/market-data.json",
+  "capital": 1000000.0,
+  "params": {
+    "cap": 0.3,
+    "maxTotalOut": 0.8,
+    "reserveFloor": 0.2,
+    "lambda": 0.1,
+    "reserveApy": 0.0,
+    "uTarget": 0.9,
+    "curveSteepness": 4.0
+  },
+  "weights": {
+    "FXRP": 0.08475,
+    "USDT0": 0.3,
+    "WFLR": 0.031759
+  },
+  "reserve": 0.583491,
+  "expectedApy": 0.010484,
+  "expectedRiskAdjApy": 0.010286,
+  "perVenue": [
+    {
+      "symbol": "FXRP",
+      "venueId": 0,
+      "weight": 0.08475,
+      "amountUsd": 84750.0,
+      "tokenAmount": 83657.92939,
+      "decimals": 6,
+      "supplyApyPostDeposit": 0.003428,
+      "marginalYield": -2.1e-07,
+      "bindingConstraint": "interior (on water line)"
+    },
+    {
+      "symbol": "USDT0",
+      "venueId": 1,
+      "weight": 0.3,
+      "amountUsd": 300000.0,
+      "tokenAmount": 300000.0,
+      "decimals": 6,
+      "supplyApyPostDeposit": 0.031985,
+      "marginalYield": 0.03118614,
+      "bindingConstraint": "venue cap"
+    },
+    {
+      "symbol": "WFLR",
+      "venueId": 2,
+      "weight": 0.031759,
+      "amountUsd": 31759.0,
+      "tokenAmount": 5297492.952578,
+      "decimals": 18,
+      "supplyApyPostDeposit": 0.018823,
+      "marginalYield": 0.01332436,
+      "bindingConstraint": "liquidity"
+    }
+  ],
+  "waterLine": -2.1e-07,
+  "assumptions": [
+    "FXRP: B,S(USD) derived from utilization*tvlUsd",
+    "USDT0: B,S(USD) derived from utilization*tvlUsd",
+    "WFLR: B,S(USD) derived from utilization*tvlUsd"
+  ],
+  "rationale": "Maximized risk-adjusted yield (lambda=0.1) by water-filling: funded venues equalize risk-adjusted marginal yield up to their caps. Clamped at cap/liquidity: USDT0, WFLR. Interior (sit on the water line): FXRP. Reserve = 58.35% (floor 20%); total deployed budget T = 80%. Assumptions: FXRP: B,S(USD) derived from utilization*tvlUsd; USDT0: B,S(USD) derived from utilization*tvlUsd; WFLR: B,S(USD) derived from utilization*tvlUsd."
+}

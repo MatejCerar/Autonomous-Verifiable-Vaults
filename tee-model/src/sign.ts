@@ -35,7 +35,7 @@ export function computePlanId(nonce: bigint, seed: bigint): Hex {
     );
 }
 
-// allocHash = keccak256(abi.encode(plan.allocations)) — abi.encode (NOT packed)
+// allocHash = keccak256(abi.encode(plan.allocations)) - abi.encode (NOT packed)
 // for the dynamic array. Matches preimage.md exactly.
 export function computeAllocHash(allocations: Allocation[]): Hex {
     return keccak256(
