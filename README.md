@@ -13,9 +13,7 @@ The worked example targets **Mystic Finance** (Morpho on Flare) with three venue
 FXRP, USDT0, WFLR. You swap in your own model, markets, and mandate at the seams below
 without touching the enforcement layer.
 
-- Full map: `ARCHITECTURE.md`  -  the allocation math: `optimizer/EQUATION.md`
-- Local run: `RUN.md`  -  what is real vs simulated: `STATUS.md`
-- Production hardware attestation: `REAL_TEE.md`
+- Run it: `RUN.md`  -  the allocation math: `optimizer/EQUATION.md`
 
 ## What is real vs simulated
 
@@ -24,8 +22,8 @@ per rule), the ERC-4626 venue adapters (fork-tested against the live Mystic Core
 vaults), the allocation optimizer (a deterministic, grid-verified solver), and the
 EIP-191 plan signing. Simulated: only the **hardware root of trust** - the demo signs
 with a throwaway key standing in for the enclave. Wiring a real `tee-node` enclave
-(`REAL_TEE.md`) makes attestation real with no contract change. Nothing here is
-broadcast unless you run a deploy/broadcast script with your own key.
+makes attestation real with no contract change. Nothing here is broadcast unless you
+run a deploy/broadcast script with your own key.
 
 ## Run it locally (two terminals)
 
@@ -88,8 +86,9 @@ wrapper costs only gas; deploying capital is your decision. Review
 3. **Your mandate** -> the caps in the deploy script / `MandateRegistry` (per-venue cap,
    reserve floor). The binding guards are the 30% per-venue cap and the 20% reserve
    floor. Tighten them live and the chain rejects even your own model's plan.
-4. **Your TEE** -> swap the simulated signer for a `tee-node` enclave (`REAL_TEE.md`).
-   Contracts are unchanged; only the signer's root of trust becomes hardware-attested.
+4. **Your TEE** -> swap the simulated signer for a `tee-node` enclave (Flare's public
+   FCC stack). Contracts are unchanged; only the signer's root of trust becomes
+   hardware-attested.
 
 ## Layout
 
@@ -112,6 +111,3 @@ wrapper costs only gas; deploying capital is your decision. Review
   `.env` files are gitignored and must never ship. Verify with `bash verify-handoff.sh`.
 - All deploy scripts read the private key from the `PK` env var. Never hardcode a key.
 - The demo signer is the well-known Anvil test key: fine for a demo, never for value.
-- The `up.sh` / `down.sh` / docker / `TEE/` path is the optional real-hardware-TEE
-  route; `TEE/` is not shipped (get `tee-node` from Flare's public repos per
-  `REAL_TEE.md`). The default demo above needs none of it.

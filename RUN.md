@@ -42,10 +42,8 @@ nothing broadcast). Slower, needs foundry + network.
 
 ---
 
-Deeper reading: `ARCHITECTURE.md` (the full map), `optimizer/EQUATION.md` (the
-allocation math), `prepared-txs/PREPARED_TX.md` (the exact calldata), `STATUS.md`
-(what is real vs simulated).
+Deeper reading: `optimizer/EQUATION.md` (the allocation math) and
+`prepared-txs/PREPARED_TX.md` (the exact calldata).
 
-The legacy Coston2 AVV walkthrough (docker + real-TEE stack, `up.sh` / `down.sh` /
-`REAL_TEE.md`, `addresses.json`) is unchanged and still available; the Mystic
-allocation flow above is the current single demo.
+To deploy it yourself and run a live cycle (or the signed-rejection proof) on
+Coston2, see the "Deploy it yourself" section of `README.md` and `scripts/`.
