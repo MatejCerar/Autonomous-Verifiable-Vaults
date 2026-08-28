@@ -118,7 +118,7 @@ export const EXT_PROXY_URL = "";
  * (a cloudflared tunnel to the enclave): repoint after each enclave redeploy.
  */
 export const GATEWAY_URL =
-  "https://guided-luis-blah-relaxation.trycloudflare.com";
+  "https://task-healthcare-specialties-arising.trycloudflare.com";
 
 /** True when the enclave gateway (real TEE path) is configured. */
 export function gatewayConfigured(): boolean {
