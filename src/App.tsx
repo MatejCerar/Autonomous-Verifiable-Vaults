@@ -26,6 +26,7 @@ import {
   displayConfigured,
   teeConfigured,
   gatewayConfigured,
+  GATEWAY_URL,
   CURATION_CONTROLLER,
   CURATION_CONTROLLER_ABI,
 } from "@/tee.config";
@@ -213,6 +214,22 @@ export function App() {
 
   const refreshMarket = useCallback(async () => {
     try {
+      // Prefer the enclave's live Mystic market (it reads Flare mainnet +
+      // DefiLlama from the server): this gives live venue APY/util, not just
+      // prices. Fall back to a Coston2 FTSO price-only read.
+      if (gatewayConfigured()) {
+        try {
+          const res = await fetch(`${GATEWAY_URL.replace(/\/+$/, "")}/market`);
+          const body = (await res.json()) as { market?: MarketData };
+          if (body?.market?.assets) {
+            console.log("[AVV] live Mystic market from enclave");
+            setLiveMarket(body.market);
+            return;
+          }
+        } catch {
+          // fall through to the price-only read
+        }
+      }
       const p = await readLivePrices();
       console.log("[AVV] live FTSO (Coston2):", p.flrUsd, p.xrpUsd, p.at);
       const base = fallbackSnapshot as unknown as MarketData;

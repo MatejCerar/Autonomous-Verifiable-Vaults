@@ -850,3 +850,15 @@ export function planFromCycle(cycle: CycleResult, capital = 1_000_000): LocalPla
   }
   return planFromMarketData(cycle.market, capital);
 }
+
+// Read the live Mystic market for the enclave. Runs server-side, where Flare
+// mainnet + DefiLlama are reachable (unlike a browser). Returns the app-schema
+// market (for display) and the optimizer-schema market (for buildPlan).
+export async function readMarketForEnclave(): Promise<{
+  app: MarketData;
+  opt: OptMarketData;
+}> {
+  const client = makeClient();
+  const { market } = await assembleMarketData(client);
+  return { app: market, opt: toOptimizerInput(market) };
+}

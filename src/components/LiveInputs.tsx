@@ -49,7 +49,7 @@ export function LiveInputs({
     <Card withBorder radius="lg" padding="lg" shadow="sm">
       <Title order={5}>Live inputs</Title>
       <Text c="dimmed" size="xs" mt={2}>
-        {live ? "Live FTSO prices (Coston2), updating" : "Live FTSO prices (Coston2)"}
+        {live ? "Live market (FTSO + Mystic), updating" : "Live market (FTSO + Mystic)"}
         ; venue rates from the market snapshot
       </Text>
 
