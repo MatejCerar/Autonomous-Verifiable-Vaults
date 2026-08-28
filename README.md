@@ -144,92 +144,42 @@ values, not a fixed address here.
 
 ## How to run
 
-The system is three parts: the contracts (already live on Coston2), the enclave
-(the real TEE, which you run with Docker), and the frontend.
+The contracts are already live on Coston2 (nothing to deploy). You need two
+things running: the enclave (the real TEE) and the frontend.
 
-### 1. Contracts
-
-The enforcement stack is already deployed and verified on Coston2 (see the table
-above). You do not need to redeploy to try the demo. To deploy your own:
-
-```
-cd contracts
-TEE_SIGNER=<enclave signer address> \
-CODE_HASH=<model fingerprint> \
-MODEL_VERSION=1 \
-forge script script/DeployCoston2.s.sol --broadcast --rpc-url https://coston2-api.flare.network/ext/C/rpc --private-key <funded key>
-```
-
-`DeployCoston2.s.sol` deploys the registry, controller, vault, adapters, and 3
-mock venues, sets the mandate caps (30 percent venue, 100 percent total-out, 20
-percent reserve floor), registers the `teeAddress` and the model fingerprint, and
-writes the addresses to `deployed.coston2.json`.
-
-### 2. Run the enclave (real TEE) with Docker
-
-The enclave runs the model and signs the plan inside a Flare Confidential Compute
-tee-node. It is a docker-compose stack. Prerequisites: Docker, Go 1.25+, Foundry,
-Node 20+, gcc, cloudflared.
-
-```
-# a) clone the scaffold and drop this repo's extension into it
-git clone --depth 1 https://github.com/flare-foundation/fce-extension-scaffold.git
-cd fce-extension-scaffold
-cp -r <this-repo>/tee-extension/extension/* typescript/src/app/
-mv typescript/src/app/__tests__/curation.test.ts typescript/src/__tests__/ 2>/dev/null || true
-cp <this-repo>/tee-extension/InstructionSender.sol contracts/InstructionSender.sol
-
-# b) fill secrets (see tee-extension/DEPLOY.md and env/*.example):
-#    .env.coston2  -> funded Coston2 key, SIMULATED_TEE=true, and the AVV vars:
-#      TEE_PLAN_SIGNER_KEY (its address must equal MandateRegistry.teeAddress),
-#      AVV_CONTROLLER=<CurationController address>, AVV_CHAIN_ID=114,
-#      AVV_CODE_HASH=<model fingerprint>, AVV_MODEL_VERSION=1
-#    config/proxy/extension_proxy.coston2.docker.toml -> [db] indexer creds (chmod 644)
-#    docker-compose.yaml -> pass the AVV_* env into the extension-tee service
-
-# c) bring up the stack (redis + ext-proxy + extension-tee)
-./scripts/full-setup.sh --chain coston2
-```
-
-Full detail and gotchas are in `tee-extension/DEPLOY.md`.
-
-### 3. Expose the enclave to the frontend (gateway + tunnel)
-
-The browser talks to the enclave through a small CORS gateway. On the host that
-runs the Docker stack:
-
-```
-# point the gateway at the extension-tee container's port 7702
-EXT=$(docker ps --format '{{.Names}}' | grep extension-tee | head -1)
-ENCLAVE_URL=http://$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$EXT"):7702 \
-  node <this-repo>/tee-extension/enclave-gateway.mjs      # listens on :8799
-
-# expose it with a stable public URL (use a NAMED tunnel for production)
-cloudflared tunnel --url http://localhost:8799
-```
-
-Take the printed `https://<slug>.trycloudflare.com` URL and set it as
-`GATEWAY_URL` in `src/tee.config.ts`. The button then reads
-`CurationController.nonce()`, POSTs `{market, nonce}` to the gateway, the enclave
-computes + signs the plan in the TEE, and the frontend calls
-`CurationController.executePlan(plan, signature)`.
-
-### 4. Frontend
+### Frontend
 
 ```
 npm install
 npm run dev        # http://localhost:3000
 ```
 
-For a public demo, build the static site and host it anywhere:
+The button reads the live market, has the enclave compute + sign the plan, and
+calls `CurationController.executePlan` on Coston2. It talks to the enclave via the
+`GATEWAY_URL` in `src/tee.config.ts`, so an enclave must be running (next).
+
+### Enclave (the real TEE)
+
+The enclave is the Flare `tee-node` running your model and holding the signing
+key. Flare ships it as a Docker stack, so running the TEE means running that stack
+on a machine you control (a laptop or a small VM). There is no shared hosted
+enclave that runs your model, the same way you would run your own validator. In
+production it runs on a GCP Confidential Space VM (real hardware attestation); for
+this demo it runs locally with simulated attestation.
+
+Steps are in `tee-extension/DEPLOY.md`. In short: clone the
+`fce-extension-scaffold`, drop in `tee-extension/extension/*`, fill the env
+(including `TEE_PLAN_SIGNER_KEY` whose address is `MandateRegistry.teeAddress`,
+and `AVV_CONTROLLER`), then `./scripts/full-setup.sh --chain coston2`. Then run
+the small gateway the browser calls and expose it:
 
 ```
-npm run build      # -> dist/
+node tee-extension/enclave-gateway.mjs         # forwards to the tee-node, listens on :8799
+cloudflared tunnel --url http://localhost:8799 # gives a public URL
 ```
 
-Note: the enclave + gateway + tunnel must be running somewhere persistent for the
-button to work. A quick cloudflared tunnel is ephemeral; use a named tunnel on a
-VM for a durable demo.
+Put that URL in `GATEWAY_URL` in `src/tee.config.ts`. For a durable public demo,
+run this on a VM with a named tunnel (a quick tunnel is ephemeral).
 
 ## Repo layout
 
