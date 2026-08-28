@@ -1,24 +1,23 @@
-# ---- secrets: NEVER commit ----
-**/.env
-**/.env.local
-**/.env.*.local
+# dependencies
+node_modules/
+tee-extension/**/node_modules/
 
-# ---- the real TEE stack (Flare's tee-node), if present locally ----
-# Its own repos + a local .env holding a private key. Never republish it here.
-TEE/
+# build output
+dist/
+*.tsbuildinfo
 
-# ---- dependencies / build artifacts ----
-# Note: contracts/lib (vendored forge-std + OpenZeppelin, MIT) IS committed so
-# `forge build` works from a clean checkout with no extra install step.
-**/node_modules/
-**/dist/
-**/*.tsbuildinfo
+# foundry build artifacts (contracts/lib is vendored and IS committed)
 contracts/out/
 contracts/cache/
 contracts/broadcast/
-frontend/public/data/
 
-# ---- misc ----
-**/*.log
-tee-model/last-plan.json
+# secrets / env
+.env
+.env.*
+!.env.example
+
+# local deploy state (addresses are printed by the deploy script)
+deployed.coston2.json
+
+# os / editor
 .DS_Store

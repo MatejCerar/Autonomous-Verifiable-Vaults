@@ -1,24 +1,30 @@
 {
-  "note": "NOT DEPLOYED. Mainnet-prepare default (real Mystic Core vaults, no controller). DeployMystic.s.sol overwrites this with the live stack once deployed on Flare mainnet.",
-  "chainId": 14,
-  "network": "flare",
-  "rpcUrl": "https://flare-api.flare.network/ext/C/rpc",
+  "chainId": 114,
+  "codeHash": "0x4c1ea64a6a81ce2cae7c1aaff36fcdbc64d9b06608471a1d346a9de1e31763ea",
   "contractRegistry": "0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019",
-  "flrUsdFeedId": "0x01464c522f55534400000000000000000000000000",
-  "xrpUsdFeedId": "0x015852502f55534400000000000000000000000000",
-  "teeSignerAddress": "",
-  "modelVersion": "1",
-  "codeHash": "",
   "deployed": {
-    "vault": "",
-    "mandateRegistry": "",
-    "curationController": "",
-    "reserveAdapter": "",
-    "venueAdapters": [],
-    "mysticVaults": [
-      "0x53184aDaBF312b490BF1EbcFdC896FEfF6019a14",
-      "0xE8dd6A1e13244A27bDaa19CcBf33013647C675d1",
-      "0x1aEadA3C251215f1294720B80FcB3D1D005F3585"
+    "curationController": "0xf8844F25f8fd5492B403a3eC63D807949EA27B17",
+    "mandateRegistry": "0x90D9d6390F475e50C2BF037FcBEd5602e3AEd4A2",
+    "mockStable": "0x9650580207eAD9D1019AA523510941902C2a55F4",
+    "mockVenues": [
+      "0x0E7BbF6d47e303Eb383b9aE27C1d46FcE683D293",
+      "0x0ae11e5c9c0019e19b0A0e3b2e89F4e7f4cc4B06"
+    ],
+    "reserveAdapter": "0xac8D1Db06F895Bc5b6a8597D5b10fBE959443D0e",
+    "vault": "0xf462df59a92f0aAFfc90b7848a92172d274876e0",
+    "venueAdapters": [
+      "0xD19ce38281f9898C1e0D7D0cCfFFE0153312f4B6",
+      "0x2587df0d480E03b9DFC83a09a58971B1D3575AA4"
     ]
-  }
+  },
+  "flrUsdFeedId": "0x01464c522f55534400000000000000000000000000",
+  "implementations": {
+    "curationControllerImpl": "0xd8FE0625CAA7901BBc81dAB978D0c70d57fC0097",
+    "mandateRegistryImpl": "0xBb54764c6EC96c1c7D03B38c415267Eeecb2376F",
+    "vaultImpl": "0x09611cC004433D3036D5a812a756C35650A5a1c9"
+  },
+  "modelVersion": "1",
+  "network": "coston2-fork",
+  "rpcUrl": "http://127.0.0.1:8545",
+  "teeSignerAddress": "0xd50950812E6A6843633e8e4d51ADDFB4Ccc59584"
 }

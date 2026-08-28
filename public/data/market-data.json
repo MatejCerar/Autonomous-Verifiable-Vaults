@@ -1,0 +1,158 @@
+{
+  "asOf": "2026-08-13T07:24:00Z",
+  "chainId": 14,
+  "chainName": "Flare mainnet",
+  "protocol": "Mystic Finance (Morpho Vault V2 over standalone Morpho Blue)",
+  "app": "https://app.mysticfinance.xyz",
+  "note": "Mystic 'Core' vaults are Morpho Vault V2 ERC-4626 vaults (adapter-based, NOT MetaMorpho V1 queues). Each vault routes into 3 underlying Morpho Blue markets via a single liquidity adapter. Morpho's hosted API excludes chainId 14, so market state is read directly from Morpho Blue and rates are recomputed from AdaptiveCurveIrm; supply APY headline is cross-checked against DefiLlama yields API.",
+  "contracts": {
+    "morphoBlue": "0xF4346F5132e810f80a28487a79c7559d9797E8B0",
+    "adaptiveCurveIrm": "0xE5B5627C5973AfAE1928a6b8e5c1D6AABFEC8a7a",
+    "contractRegistry": "0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019",
+    "ftsoV2": "0x7BDE3Df0624114eDB3A67dFe6753e62f4e7c1d20"
+  },
+  "prices": {
+    "FLR_USD": {"value": 0.0059951, "source": "FTSO V2 getFeedById(FLR/USD) live @ block ts 2026-08-13T07:19:35Z; cross-checked CoinMarketCap $0.006071 / Coinbase $0.005975", "confidence": "high"},
+    "XRP_USD": {"value": 1.013054, "source": "FTSO V2 getFeedById(XRP/USD) live @ 2026-08-13T07:19:35Z", "confidence": "high"},
+    "USDT0_USD": {"value": 1.0, "source": "ASSUMED PEG (stablecoin, USDT0 = LayerZero USDT). Treat as 1.0 with small depeg tail.", "confidence": "assumed-peg"}
+  },
+  "assets": [
+    {
+      "symbol": "FXRP",
+      "token": "0xAd552A648C74D49E10027AB8a618A3ad4901c5bE",
+      "tokenSymbol": "FXRP",
+      "decimals": 6,
+      "vault": "0x53184aDaBF312b490BF1EbcFdC896FEfF6019a14",
+      "vaultName": "Core FXRP",
+      "vaultSymbol": "CSXRP",
+      "vaultDecimals": 18,
+      "vaultType": "Morpho Vault V2",
+      "sharePriceAssetsPerShare": 1.000432,
+      "totalAssetsTokens": 2181370.558200,
+      "totalSupplyShares": 2180427.438063,
+      "supplyApy": 0.00366,
+      "apyBase": 0.00366,
+      "apyReward": 0.0,
+      "supplyApyOnchainComputed": 0.00677,
+      "utilization": 0.8302,
+      "availableLiquidityUsd": 1200000,
+      "availableLiquidityNote": "~$198k instantly withdrawable from adapter (market idle) PLUS ~$1.0M idle FXRP held in the vault buffer (totalAssets 2.18M FXRP vs 1.15M supplied to Morpho). So instant vault liquidity ~ $1.2M; source: on-chain.",
+      "tvlUsd": 2201182,
+      "lltv": 0.625,
+      "lltvNote": "Dominant underlying market (93% weight) has LLTV 62.5% (collateral USDT0); other two markets 77%.",
+      "originationFee": 0.0,
+      "performanceFee": 0.10,
+      "priceUsd": 1.013054,
+      "annualizedVol": 0.55,
+      "annualizedVolSource": "ESTIMATE. XRP 30-90d realized vol typically 0.50-0.65 annualized; XRP/USD $1.013 live. Labeled estimate.",
+      "sources": {
+        "supplyApy": "DefiLlama yields pool ae77c3b6-f9ca-49a8-b24d-08c12ac2d7b4 (apy=0.36551%)",
+        "supplyApyOnchainComputed": "Recomputed from Morpho Blue market state + AdaptiveCurveIrm rateAtTarget; vault-weighted, net 10% perf fee",
+        "utilization": "on-chain: sum(totalBorrowAssets)/sum(totalSupplyAssets) weighted by adapter supply across 3 markets",
+        "tvlUsd": "DefiLlama tvlUsd",
+        "lltv": "Morpho Blue idToMarketParams",
+        "priceUsd": "FTSO V2 XRP/USD proxy"
+      }
+    },
+    {
+      "symbol": "USDT0",
+      "token": "0xe7cd86e13AC4309349F30B3435a9d337750fC82D",
+      "tokenSymbol": "USD₮0",
+      "decimals": 6,
+      "vault": "0xE8dd6A1e13244A27bDaa19CcBf33013647C675d1",
+      "vaultName": "Core USDT0",
+      "vaultSymbol": "COREUSDT0",
+      "vaultDecimals": 18,
+      "vaultType": "Morpho Vault V2",
+      "sharePriceAssetsPerShare": 1.018430,
+      "totalAssetsTokens": 21094814.832348,
+      "totalSupplyShares": 20713042.121902,
+      "supplyApy": 0.03278,
+      "apyBase": 0.03278,
+      "apyReward": 0.0,
+      "supplyApyOnchainComputed": 0.03370,
+      "utilization": 0.8489,
+      "availableLiquidityUsd": 3187888,
+      "availableLiquidityNote": "~$3.19M instantly withdrawable (market idle across 3 markets); on-chain. Vault holds negligible idle buffer.",
+      "tvlUsd": 21074299,
+      "lltv": 0.77,
+      "lltvNote": "Dominant market (98.5% weight) LLTV 77% (collateral FXRP); other two markets 62.5%.",
+      "originationFee": 0.0,
+      "performanceFee": 0.10,
+      "priceUsd": 1.0,
+      "annualizedVol": 0.01,
+      "annualizedVolSource": "ESTIMATE. USDT0 = LayerZero-bridged USDT, treated as stable; small depeg tail. 1% annualized proxy vol for the risk model.",
+      "sources": {
+        "supplyApy": "DefiLlama yields pool 5ea185f4-b3cc-4fd8-afe6-39037bf483dd (apy=3.27832%)",
+        "supplyApyOnchainComputed": "Recomputed on-chain, matches DefiLlama to ~0.1pp",
+        "utilization": "on-chain weighted",
+        "tvlUsd": "DefiLlama",
+        "lltv": "Morpho Blue idToMarketParams"
+      }
+    },
+    {
+      "symbol": "WFLR",
+      "token": "0x1D80c49BbBCd1C0911346656B529DF9E5c2F783d",
+      "tokenSymbol": "WFLR",
+      "decimals": 18,
+      "vault": "0x1aEadA3C251215f1294720B80FcB3D1D005F3585",
+      "vaultName": "Core wFLR",
+      "vaultSymbol": "COREWFLR",
+      "vaultDecimals": 18,
+      "vaultType": "Morpho Vault V2",
+      "sharePriceAssetsPerShare": 1.002845,
+      "totalAssetsTokens": 93175628.728072,
+      "totalSupplyShares": 92911297.439615,
+      "supplyApy": 0.04589,
+      "apyBase": 0.04589,
+      "apyReward": 0.0,
+      "supplyApyOnchainComputed": 0.04711,
+      "utilization": 0.9431,
+      "availableLiquidityUsd": 31759,
+      "availableLiquidityNote": "ONLY ~$32k (5.3M WFLR) instantly withdrawable: markets run very hot (92-98.6% util). Large redemptions would need forceDeallocate or wait. On-chain.",
+      "tvlUsd": 560794,
+      "lltv": 0.86,
+      "lltvNote": "Largest market (67% weight) LLTV 86% (collateral rFLR/staked-FLR type); other two 62.5%.",
+      "originationFee": 0.0,
+      "performanceFee": 0.10,
+      "priceUsd": 0.0059951,
+      "annualizedVol": 0.80,
+      "annualizedVolSource": "ESTIMATE. FLR at all-time-low ($0.00588 on 2026-08-05), elevated recent vol; 30-90d realized est 0.70-0.90 annualized. Labeled estimate.",
+      "sources": {
+        "supplyApy": "DefiLlama yields pool cd22e73a-e73d-48b1-a919-2522b109119a (apy=4.58941%)",
+        "supplyApyOnchainComputed": "Recomputed on-chain, matches DefiLlama to ~0.1pp",
+        "utilization": "on-chain weighted",
+        "tvlUsd": "DefiLlama",
+        "lltv": "Morpho Blue idToMarketParams",
+        "priceUsd": "FTSO V2 FLR/USD"
+      }
+    }
+  ],
+  "irm": {
+    "type": "AdaptiveCurveIrm",
+    "address": "0xE5B5627C5973AfAE1928a6b8e5c1D6AABFEC8a7a",
+    "targetUtilization": 0.90,
+    "curveSteepness": 4.0,
+    "shape": "Piecewise-linear kink at 90% util. Below target, borrow rate scales from rateAtTarget/4 (u=0) up to rateAtTarget (u=90%). Above target it scales up to 4x rateAtTarget at u=100%, and rateAtTarget itself drifts up over time if util stays high (adaptive). Supply APY = borrowAPY * utilization * (1 - marketFee=0). Marginal supply yield to a NEW depositor DROPS as deposit lowers utilization: a deposit of size d into a market with supply S, borrow B moves util from B/S to B/(S+d), so marginal yield falls roughly proportional to util decrease, steeply if you were above 90%.",
+    "rateAtTargetPerSecWad": {
+      "FXRP_dominant": 291842396,
+      "USDT0_dominant": 1409185676,
+      "WFLR_dominant": 1148093065
+    }
+  },
+  "pairwiseCorrelation": {
+    "order": ["FXRP", "USDT0", "WFLR"],
+    "matrix": [
+      [1.00, 0.05, 0.45],
+      [0.05, 1.00, 0.05],
+      [0.45, 0.05, 1.00]
+    ],
+    "source": "ESTIMATE for the risk model. FXRP price-driver = XRP, WFLR = FLR. XRP-FLR correlation ~0.4-0.5 (both crypto-beta, FLR partly an XRP-ecosystem asset). USDT0 stable => ~0 correlation to both. These are yield-relevant price-risk correlations, not APY correlations.",
+    "confidence": "estimate"
+  },
+  "confidenceSummary": {
+    "live_onchain": ["vault addresses", "token addresses", "decimals", "names/symbols", "totalAssets", "totalSupply", "share prices", "utilization", "market LLTVs", "performanceFee", "available liquidity", "FLR/USD", "XRP/USD", "rateAtTarget"],
+    "api_defillama": ["supplyApy headline", "apyBase", "tvlUsd", "apy history"],
+    "estimate": ["annualizedVol per asset", "pairwiseCorrelation", "USDT0 peg=1.0"]
+  }
+}
