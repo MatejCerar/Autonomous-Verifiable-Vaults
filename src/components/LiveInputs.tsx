@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Card, Group, Stack, Table, Text, Title } from "@mantine/core";
 import type { MarketData } from "@/data";
 import { readLivePrices } from "@/live";
+import { GATEWAY_URL, gatewayConfigured } from "@/tee.config";
 import { fmtPercent } from "./vault";
 
 export function LiveInputs({
@@ -16,12 +17,28 @@ export function LiveInputs({
   market?: MarketData;
   asOf?: string;
 }) {
-  // Self-fetch live FTSO prices from Coston2, on mount and every 15s.
+  // Self-fetch the live market (this component, not app state). Prefer the
+  // enclave's live Mystic market (prices + venue APY/util); fall back to a
+  // Coston2 FTSO price-only read. On mount and every 15s.
+  const [mkt, setMkt] = useState<MarketData>();
   const [live, setLive] = useState<{ flr: number; xrp: number; at: string }>();
   const [priceError, setPriceError] = useState<string>();
   useEffect(() => {
     let on = true;
     const read = async () => {
+      if (gatewayConfigured()) {
+        try {
+          const res = await fetch(`${GATEWAY_URL.replace(/\/+$/, "")}/market`);
+          const body = (await res.json()) as { market?: MarketData };
+          if (on && body?.market?.assets) {
+            setMkt(body.market);
+            setPriceError(undefined);
+            return;
+          }
+        } catch {
+          // fall through to the Coston2 price-only read
+        }
+      }
       try {
         const p = await readLivePrices();
         if (on) {
@@ -41,9 +58,10 @@ export function LiveInputs({
     };
   }, []);
 
-  const flrUsd = live?.flr ?? market?.prices.FLR_USD.value;
-  const xrpUsd = live?.xrp ?? market?.prices.XRP_USD.value;
-  const shownAt = live?.at ?? asOf;
+  const displayMarket = mkt ?? market;
+  const flrUsd = mkt?.prices.FLR_USD.value ?? live?.flr ?? market?.prices.FLR_USD.value;
+  const xrpUsd = mkt?.prices.XRP_USD.value ?? live?.xrp ?? market?.prices.XRP_USD.value;
+  const shownAt = mkt?.asOf ?? live?.at ?? asOf;
 
   return (
     <Card withBorder radius="lg" padding="lg" shadow="sm">
@@ -59,20 +77,20 @@ export function LiveInputs({
         </Text>
       )}
 
-      {!market && flrUsd === undefined && !priceError && (
+      {!displayMarket && flrUsd === undefined && !priceError && (
         <Text c="dimmed" size="sm" mt="md">
           Reading live prices...
         </Text>
       )}
 
-      {(market || flrUsd !== undefined) && (
+      {(displayMarket || flrUsd !== undefined) && (
         <Stack gap="md" mt="md">
           <Group grow>
             <PriceStat label="FLR / USD" value={flrUsd ?? 0} />
             <PriceStat label="XRP / USD" value={xrpUsd ?? 0} />
           </Group>
 
-          {market && (
+          {displayMarket && (
           <Table verticalSpacing="xs" fz="sm">
             <Table.Thead>
               <Table.Tr>
@@ -82,7 +100,7 @@ export function LiveInputs({
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {market.assets.map((a) => (
+              {displayMarket.assets.map((a) => (
                 <Table.Tr key={a.symbol}>
                   <Table.Td>
                     <Text fw={550}>{a.symbol}</Text>
