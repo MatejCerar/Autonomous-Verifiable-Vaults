@@ -10,6 +10,22 @@ Two parts wired into one system: the enforcement backend (`contracts/`) and a
 real Flare enclave (`tee-extension/`) that computes and signs the plan. The
 frontend (`src/`) is the vault dashboard with the button that runs a cycle.
 
+## Two ways to use this
+
+1. **Try the demo (no setup).** Open the frontend. It talks to a running enclave
+   (the one whose URL is in `src/tee.config.ts`) and runs full cycles on Coston2:
+   read the live market, sign the plan in the TEE, enforce it on-chain, move
+   funds. You are running the shipped model; you cannot change it from the
+   browser. This is enough to see the whole "verify instead of trust" loop work.
+
+2. **Run your own model (needs Docker).** To swap in your own allocation model
+   you run your own enclave: bring up the enclave stack (see "Run it" below and
+   `tee-extension/SERVER.md`), replace the optimizer in
+   `tee-extension/extension/vendor/optimize.ts` (and `buildPlan` in `avv.ts`),
+   register your model fingerprint and signer, then point `GATEWAY_URL` at your
+   enclave. The contracts and the frozen plan format do not change; only your
+   model does. See "Where the model goes".
+
 ## Run it
 
 The contracts are already live on Coston2 (nothing to deploy). You need the
@@ -34,32 +50,37 @@ manager, tee-proxy, indexer), but the node that runs your model is yours, the sa
 way you run your own validator. In production it runs on a GCP Confidential Space
 VM with real hardware attestation; here it runs with simulated attestation.
 
-Steps are in `tee-extension/DEPLOY.md`. In short: clone the
-`fce-extension-scaffold`, drop in `tee-extension/extension/*`, fill the env
-(`TEE_PLAN_SIGNER_KEY` whose address is `MandateRegistry.teeAddress`, and
-`AVV_CONTROLLER`), then `./scripts/full-setup.sh --chain coston2`. Then run the
-gateway the browser calls and expose it:
+Easiest way (Docker only, see `tee-extension/SERVER.md`): the repo ships a
+single-file enclave service plus a compose file that also runs a public tunnel.
+On any server with Docker:
 
 ```
-node tee-extension/enclave-gateway.mjs         # forwards to the tee-node, on :8799
-cloudflared tunnel --url http://localhost:8799 # gives a public URL
+git clone https://github.com/MatejCerar/Autonomous-Verifiable-Vaults.git
+cd Autonomous-Verifiable-Vaults/tee-extension
+docker compose -f docker-compose.enclave.yml up -d
+docker compose -f docker-compose.enclave.yml logs tunnel | grep trycloudflare
 ```
 
-Put that URL in `GATEWAY_URL` in `src/tee.config.ts`. For a durable demo, run this
-on a VM with a named tunnel (a quick tunnel is ephemeral).
+Put the printed `https://<slug>.trycloudflare.com` URL in `GATEWAY_URL` in
+`src/tee.config.ts` and rebuild the frontend. That service reads the live Mystic
+market, runs the optimizer, and signs the plan (the same model + signing code the
+enclave runs). The full Flare tee-node stack (with the on-chain FCC message bus)
+is in `tee-extension/DEPLOY.md` if you want it.
 
 ## What one click does
 
 1. Read `CurationController.nonce()` from Coston2.
-2. Send `{market snapshot, nonce}` to the enclave (via the gateway).
-3. The enclave runs the optimizer and EIP-191-signs the plan INSIDE the TEE, and
-   returns `abi.encode(Plan, signature)`.
+2. Ask the enclave for a plan (send the nonce).
+3. The enclave reads the LIVE Mystic market (FTSO prices + DefiLlama APY/TVL),
+   runs the optimizer, and EIP-191-signs the plan INSIDE the TEE, returning
+   `abi.encode(Plan, signature)`.
 4. The frontend decodes `(plan, signature)`.
 5. The frontend calls `CurationController.executePlan(plan, signature)` on
    Coston2, which verifies and enforces the plan and moves funds through the
    adapters.
 
-Live FTSO prices are read from Coston2.
+The frontend also shows the live market (venue APY/util) via the enclave's
+`/market` endpoint.
 
 ## The enforcement backend (contracts/)
 
@@ -93,7 +114,12 @@ The model is the optimizer, and it runs inside the TEE:
   plan, EIP-191-signs the preimage, and returns `abi.encode(Plan, signature)`.
 
 To swap in your own model, replace the optimizer and `buildPlan`. It must emit a
-`PlanLib.Plan`; the enclave signs it and the on-chain checks are unchanged.
+`PlanLib.Plan`; the enclave signs it and the on-chain checks are unchanged. Doing
+this means running your own enclave (the Docker stack), because the model lives
+inside the enclave, not in the browser: the frontend cannot change the model, it
+only asks whatever enclave `GATEWAY_URL` points at for a signed plan. So trying
+the demo uses the shipped model; using your own model means standing up your own
+enclave and pointing `GATEWAY_URL` at it.
 
 ## Real vs simulated
 

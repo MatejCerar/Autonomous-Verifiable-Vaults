@@ -28,14 +28,24 @@ export function LiveInputs({
     const read = async () => {
       if (gatewayConfigured()) {
         try {
-          const res = await fetch(`${GATEWAY_URL.replace(/\/+$/, "")}/market`);
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), 8000);
+          const res = await fetch(`${GATEWAY_URL.replace(/\/+$/, "")}/market`, {
+            signal: ctrl.signal,
+          });
+          clearTimeout(t);
           const body = (await res.json()) as { market?: MarketData };
           if (on && body?.market?.assets) {
+            console.log(
+              "[AVV] LiveInputs got LIVE Mystic market:",
+              body.market.assets.map((a) => `${a.symbol} ${(a.supplyApy * 100).toFixed(2)}%`).join(" "),
+            );
             setMkt(body.market);
             setPriceError(undefined);
             return;
           }
-        } catch {
+        } catch (e) {
+          console.warn("[AVV] LiveInputs /market fetch failed:", e);
           // fall through to the Coston2 price-only read
         }
       }
@@ -118,8 +128,13 @@ export function LiveInputs({
           )}
 
           {shownAt && (
-            <Text c="dimmed" size="xs" ff="monospace">
-              as of {new Date(shownAt).toLocaleTimeString()}
+            <Text c={mkt ? "teal" : "orange"} size="xs" ff="monospace">
+              as of {new Date(shownAt).toLocaleTimeString()} -{" "}
+              {mkt
+                ? "live Mystic (your server)"
+                : live
+                  ? "live FTSO prices only"
+                  : "bundled fallback (stale build - hard refresh)"}
             </Text>
           )}
         </Stack>
