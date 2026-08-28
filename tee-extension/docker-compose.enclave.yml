@@ -1,0 +1,28 @@
+# Durable AVV enclave endpoint for a server (Docker only, no node install needed).
+#
+#   enclave  : runs enclave-service.mjs (the model + TEE signing) on :8799
+#   tunnel   : cloudflared, gives a public HTTPS URL the browser can call
+#
+# Bring up:   docker compose -f docker-compose.enclave.yml up -d
+# Get URL:    docker compose -f docker-compose.enclave.yml logs tunnel | grep trycloudflare
+# Then set GATEWAY_URL in src/tee.config.ts to that https URL.
+#
+# The quick tunnel URL is stable while the containers run (restart: unless-stopped).
+# For a permanent hostname use a named cloudflared tunnel (see cloudflared docs).
+services:
+  enclave:
+    image: node:22-slim
+    working_dir: /app
+    volumes:
+      - ./enclave-service.mjs:/app/enclave-service.mjs:ro
+    command: node enclave-service.mjs
+    restart: unless-stopped
+    expose:
+      - "8799"
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate --url http://enclave:8799
+    restart: unless-stopped
+    depends_on:
+      - enclave
