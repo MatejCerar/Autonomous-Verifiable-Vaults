@@ -64,8 +64,22 @@ docker compose -f docker-compose.enclave.yml logs tunnel | grep trycloudflare
 Put the printed `https://<slug>.trycloudflare.com` URL in `GATEWAY_URL` in
 `src/tee.config.ts` and rebuild the frontend. That service reads the live Mystic
 market, runs the optimizer, and signs the plan (the same model + signing code the
-enclave runs). The full Flare tee-node stack (with the on-chain FCC message bus)
-is in `tee-extension/DEPLOY.md` if you want it.
+enclave runs).
+
+Full FCC tee-node (the real on-chain message bus + attestation). The heavier path:
+the model runs inside a registered Flare tee-node built from Flare's scaffold
+(https://github.com/flare-foundation/fce-extension-scaffold). One command from the
+repo root sets it up:
+
+```
+./setup-scaffold.sh
+```
+
+It clones the scaffold, version-matches it to Coston2, and wires the AVV extension
+in. You then fill two funded keys plus the Coston2 indexer `[db]` creds (from
+Flare) and deploy. The full steps, the version patches, and the DB config are in
+`tee-extension/COSTON2-FCC.md`. This path is the only one that needs the indexer
+DB; the gateway service above does not.
 
 ## What one click does
 
