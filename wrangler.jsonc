@@ -1,0 +1,7 @@
+{
+  "name": "autonomous-verifiable-vaults",
+  "compatibility_date": "2025-09-04",
+  "assets": {
+    "directory": "./dist"
+  }
+}
