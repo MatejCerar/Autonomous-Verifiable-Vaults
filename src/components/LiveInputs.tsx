@@ -131,7 +131,7 @@ export function LiveInputs({
             <Text c={mkt ? "teal" : "orange"} size="xs" ff="monospace">
               as of {new Date(shownAt).toLocaleTimeString()} -{" "}
               {mkt
-                ? "live Mystic (your server)"
+                ? "live Mystic (from the enclave)"
                 : live
                   ? "live FTSO prices only"
                   : "bundled fallback (stale build - hard refresh)"}
